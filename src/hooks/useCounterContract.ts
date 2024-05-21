@@ -1,11 +1,10 @@
-import { useState } from "react";
-import Counter from "../contracts/counter";
-import { useTonClient } from "./useTonClient";
-import { useAsyncInitialize } from "./useAsyncInitialize";
-import { useTonConnect } from "./useTonConnect";
-import { Address, OpenedContract } from "ton-core";
-import { useQuery } from "@tanstack/react-query";
-import { CHAIN } from "@tonconnect/protocol";
+import { useQuery } from '@tanstack/react-query';
+import { Address, OpenedContract } from '@ton/core';
+import { CHAIN } from '@tonconnect/protocol';
+import Counter from '../contracts/counter';
+import { useAsyncInitialize } from './useAsyncInitialize';
+import { useTonClient } from './useTonClient';
+import { useTonConnect } from './useTonConnect';
 
 export function useCounterContract() {
   const { client } = useTonClient();
@@ -16,21 +15,21 @@ export function useCounterContract() {
     const contract = new Counter(
       Address.parse(
         network === CHAIN.MAINNET
-          ? "EQBPEDbGdwaLv1DKntg9r6SjFIVplSaSJoJ-TVLe_2rqBOmH"
-          : "EQBYLTm4nsvoqJRvs_L-IGNKwWs5RKe19HBK_lFadf19FUfb"
-      ) // replace with your address from tutorial 2 step 8
+          ? 'EQBPEDbGdwaLv1DKntg9r6SjFIVplSaSJoJ-TVLe_2rqBOmH'
+          : 'EQBYLTm4nsvoqJRvs_L-IGNKwWs5RKe19HBK_lFadf19FUfb',
+      ), // replace with your address from tutorial 2 step 8
     );
     return client.open(contract) as OpenedContract<Counter>;
   }, [client]);
 
-  const { data, isFetching } = useQuery(
-    ["counter"],
-    async () => {
+  const { data, isFetching } = useQuery({
+    queryKey: ['counter'],
+    refetchInterval: 300 * 1000,
+    queryFn: async () => {
       if (!counterContract) return null;
       return (await counterContract!.getCounter()).toString();
     },
-    { refetchInterval: 3000 }
-  );
+  });
 
   return {
     value: isFetching ? null : data,

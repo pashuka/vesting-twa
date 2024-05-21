@@ -1,20 +1,7 @@
-import {
-  Contract,
-  ContractProvider,
-  Sender,
-  Address,
-  Cell,
-  contractAddress,
-  beginCell,
-  toNano,
-} from "ton-core";
+import { Address, Cell, Contract, ContractProvider, Sender, beginCell, toNano } from '@ton/core';
 
-export default class FaucetJetton implements Contract {
-  async sendMintFromFaucet(
-    provider: ContractProvider,
-    via: Sender,
-    receivingAddress: Address
-  ) {
+export default class Jetton implements Contract {
+  async sendMintFromFaucet(provider: ContractProvider, via: Sender, receivingAddress: Address) {
     const MINT = 21;
     const INTERNAL_TRANSFER = 0x178d4519;
     // @ts-ignore
@@ -22,7 +9,7 @@ export default class FaucetJetton implements Contract {
       .storeUint(MINT, 32)
       .storeUint(0, 64) // queryid
       .storeAddress(receivingAddress)
-      .storeCoins(toNano("0.02"))
+      .storeCoins(toNano('0.02'))
       .storeRef(
         // internal transfer message
         beginCell()
@@ -31,21 +18,21 @@ export default class FaucetJetton implements Contract {
           .storeCoins(toNano(150))
           .storeAddress(null)
           .storeAddress(receivingAddress) // So we get a notification
-          .storeCoins(toNano("0.001"))
+          .storeCoins(toNano('0.001'))
           .storeBit(false) // forward_payload in this slice, not separate cell
-          .endCell()
+          .endCell(),
       )
       .endCell();
 
     await provider.internal(via, {
-      value: toNano("0.05"),
+      value: toNano('0.05'),
       body: mintTokensBody,
     });
   }
 
   async getWalletAddress(provider: ContractProvider, forAddress: Address) {
-    const { stack } = await provider.get("get_wallet_address", [
-      { type: "slice", cell: beginCell().storeAddress(forAddress).endCell() },
+    const { stack } = await provider.get('get_wallet_address', [
+      { type: 'slice', cell: beginCell().storeAddress(forAddress).endCell() },
     ]);
 
     return stack.readAddress().toString();
@@ -53,6 +40,6 @@ export default class FaucetJetton implements Contract {
 
   constructor(
     readonly address: Address,
-    readonly init?: { code: Cell; data: Cell }
+    readonly init?: { code: Cell; data: Cell },
   ) {}
 }

@@ -1,6 +1,6 @@
-import { CHAIN } from "@tonconnect/protocol";
-import { Sender, SenderArguments } from "ton-core";
-import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import { Cell, Sender, SenderArguments, beginCell, storeStateInit } from '@ton/core';
+import { CHAIN } from '@tonconnect/protocol';
+import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 
 export function useTonConnect(): {
   sender: Sender;
@@ -14,12 +14,17 @@ export function useTonConnect(): {
   return {
     sender: {
       send: async (args: SenderArguments) => {
+        let stateCell = new Cell();
+        if (args.init) {
+          stateCell = beginCell().store(storeStateInit(args.init)).endCell();
+        }
         tonConnectUI.sendTransaction({
           messages: [
             {
               address: args.to.toString(),
               amount: args.value.toString(),
-              payload: args.body?.toBoc().toString("base64"),
+              stateInit: stateCell.toBoc().toString('base64'),
+              payload: args.body?.toBoc().toString('base64'),
             },
           ],
           validUntil: Date.now() + 5 * 60 * 1000, // 5 minutes for user to approve

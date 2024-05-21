@@ -1,7 +1,7 @@
 {
-  "name": "ton-starter-twa-vite",
+  "name": "vesting-twa",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,28 +10,34 @@
     "configbot": "node configure.js"
   },
   "dependencies": {
-    "@orbs-network/ton-access": "^2.2.2",
-    "@tanstack/react-query": "^4.24.4",
-    "@tonconnect/ui-react": "^2.0.0-beta.2",
-    "@twa-dev/sdk": "^6.4.2",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/joy": "^5.0.0-beta.36",
+    "@orbs-network/ton-access": "^2.3.3",
+    "@tanstack/react-query": "^5.32.0",
+    "@ton/core": "^0.56.3",
+    "@ton/crypto": "^3.2.0",
+    "@ton/ton": "^13.11.1",
+    "@tonconnect/ui-react": "^2.0.2",
+    "@twa-dev/sdk": "^7.0.0",
     "buffer": "^6.0.3",
-    "is-mobile": "^3.1.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "styled-components": "^5.3.6",
-    "ton": "13.3.0",
-    "ton-core": "^0.46.0",
-    "ton-crypto": "^3.2.0",
-    "use-local-storage": "^2.3.6",
-    "vite-plugin-node-polyfills": "^0.7.0"
+    "dayjs": "^1.11.11",
+    "is-mobile": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.51.4",
+    "styled-components": "^6.1.8",
+    "typescript": "^5.4.5",
+    "use-local-storage": "^3.0.0",
+    "vite-plugin-node-polyfills": "^0.21.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.18",
-    "@types/react": "^18.0.27",
-    "@types/react-dom": "^18.0.10",
-    "@types/styled-components": "^5.1.26",
-    "@vitejs/plugin-react": "^3.0.1",
-    "typescript": "^4.9.5",
-    "vite": "^4.0.4"
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@types/styled-components": "^5.1.34",
+    "@vitejs/plugin-react": "^4.2.1",
+    "prettier": "^3.2.5"
   }
 }
