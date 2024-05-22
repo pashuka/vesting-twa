@@ -61,19 +61,22 @@ export const getInputDateFormat = (d: Date) => d.toISOString().split('T')[0];
 
 // totalDuration > 0
 // totalDuration <= 135 years (2^32 seconds)
-export const validateTotalDuration = (field: number, form: LinearVestingForm) => {
-  const seconds = durationSeconds(form.totalDurationType);
-  const totalDurationValue = seconds * field;
+export const validateTotalDuration = (_: number, form: LinearVestingForm) => {
+  const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
+  const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
+  console.log(form);
   if (totalDurationValue < 1) return 'Значение должно быть больше 0';
   if (totalDurationValue > START_TIME_OVERHEAD) return 'Значение должно быть меньше 135 лет';
+  if (totalDurationValue < unlockPeriodValue)
+    return 'Значение должно быть больше либо равно частоты зазблокировки';
 };
 
 // totalDuration mod unlockPeriod == 0
 // unlockPeriod > 0
 // unlockPeriod <= totalDuration
-export const validateUnlockPeriod = (field: number, form: LinearVestingForm) => {
+export const validateUnlockPeriod = (_: number, form: LinearVestingForm) => {
   const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
-  const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * field;
+  const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
   if (unlockPeriodValue < 1) return 'Значение должно быть больше 0';
   if (unlockPeriodValue > totalDurationValue)
     return 'Значение должно быть меньше либо равно общей продолжительности блокировки';
@@ -82,14 +85,14 @@ export const validateUnlockPeriod = (field: number, form: LinearVestingForm) => 
 };
 
 // cliffDuration >= 0
-// cliffDuration < totalDuration
+// cliffDuration <= totalDuration
 // cliffDuration mod unlockPeriod == 0
-export const validateCliffDuration = (field: number, form: LinearVestingForm) => {
+export const validateCliffDuration = (_: number, form: LinearVestingForm) => {
   const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
   const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
-  const cliffDdurationValue = durationSeconds(form.cliffDurationType) * field;
+  const cliffDdurationValue = durationSeconds(form.cliffDurationType) * form.cliffDuration;
   if (cliffDdurationValue < 0) return 'Значение должно быть больше либо равно 0';
-  if (cliffDdurationValue >= totalDurationValue)
+  if (cliffDdurationValue > totalDurationValue)
     return 'Значение должно быть меньше общей продолжительности блокировки';
   if (cliffDdurationValue > 0 && cliffDdurationValue % unlockPeriodValue !== 0)
     return 'Значение должно быть делиться без остатка на частоту разблокировки';
