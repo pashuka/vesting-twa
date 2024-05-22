@@ -2,7 +2,7 @@ import { Address, OpenedContract } from '@ton/core';
 import { WalletContractV4 } from '@ton/ton';
 import { CHAIN } from '@tonconnect/ui-react';
 import { START_TIME_OVERHEAD } from './constants';
-import { DurationType, LinearVestingForm } from './types';
+import { DurationType, LinearVestingConfig, LinearVestingForm } from './types';
 
 export const sleep = (ms: number | undefined) =>
   new Promise((resolve) => {
@@ -57,14 +57,26 @@ export const durationSeconds = (d: DurationType) => {
   }
 };
 export const today = () => new Date();
+export const addDays = (d: Date, days: number) => {
+  const result = new Date(d);
+  result.setDate(result.getDate() + days);
+  return result;
+};
 export const getInputDateFormat = (d: Date) => d.toISOString().split('T')[0];
+
+export const prepareLinearVestingConfig = (f: LinearVestingForm): LinearVestingConfig => ({
+  start_time: Math.round(new Date(f.startTime).getTime() / 1000),
+  total_duration: durationSeconds(f.totalDurationType) * f.totalDuration,
+  unlock_period: durationSeconds(f.unlockPeriodType) * f.unlockPeriod,
+  cliff_duration: durationSeconds(f.cliffDurationType) * f.cliffDuration,
+  owner_address: Address.parse(f.ownerAddress),
+});
 
 // totalDuration > 0
 // totalDuration <= 135 years (2^32 seconds)
 export const validateTotalDuration = (_: number, form: LinearVestingForm) => {
   const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
   const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
-  console.log(form);
   if (totalDurationValue < 1) return 'Значение должно быть больше 0';
   if (totalDurationValue > START_TIME_OVERHEAD) return 'Значение должно быть меньше 135 лет';
   if (totalDurationValue < unlockPeriodValue)
@@ -101,7 +113,7 @@ export const validateCliffDuration = (_: number, form: LinearVestingForm) => {
 export const unlockPeriodHelperText = (form: LinearVestingForm) => {
   const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
   const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
-  return `Депозит будет разбит на ${totalDurationValue / unlockPeriodValue} частей, где одна часть выплат составит ~ ${(100 / (totalDurationValue / unlockPeriodValue)).toPrecision(4)} % от общего депозита`;
+  return `Депозит будет разбит на ${totalDurationValue / unlockPeriodValue} части/ей, где одна часть выплат составит ~ ${(100 / (totalDurationValue / unlockPeriodValue)).toPrecision(4)} % от общего депозита`;
 };
 
 export const cliffPeriodHelperText = (form: LinearVestingForm) => {

@@ -1,4 +1,4 @@
-import { useJettonContract } from '../hooks/useJettonContract';
+import { useJettonContract } from '../hooks/useJettonContract-legacy';
 import { useTonConnect } from '../hooks/useTonConnect';
 import { Button, Card, Ellipsis, FlexBoxCol, FlexBoxRow } from './styled/styled';
 

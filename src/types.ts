@@ -1,3 +1,4 @@
+import { ColorPaletteProp } from '@mui/joy';
 import { Address } from '@ton/core';
 
 export const durationTypes = ['hour', 'day', 'week', 'month'];
@@ -19,4 +20,9 @@ export type LinearVestingConfig = {
   unlock_period: number;
   cliff_duration: number;
   owner_address: Address;
+};
+
+export type FormHelperTextMessage = {
+  message: string;
+  color: ColorPaletteProp;
 };
