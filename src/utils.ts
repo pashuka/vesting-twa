@@ -61,62 +61,51 @@ export const getInputDateFormat = (d: Date) => d.toISOString().split('T')[0];
 
 // totalDuration > 0
 // totalDuration <= 135 years (2^32 seconds)
-// totalDuration mod unlockPeriod == 0
 export const validateTotalDuration = (field: number, form: LinearVestingForm) => {
   const seconds = durationSeconds(form.totalDurationType);
   const totalDurationValue = seconds * field;
-  const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
-  if (
-    totalDurationValue < 1 ||
-    totalDurationValue > START_TIME_OVERHEAD ||
-    totalDurationValue % unlockPeriodValue !== 0
-  ) {
-    return 'Значение должно быть больше 0, меньше 135 лет, делиться без остатка на частоту разблокировки';
-  }
+  if (totalDurationValue < 1) return 'Значение должно быть больше 0';
+  if (totalDurationValue > START_TIME_OVERHEAD) return 'Значение должно быть меньше 135 лет';
 };
 
+// totalDuration mod unlockPeriod == 0
 // unlockPeriod > 0
 // unlockPeriod <= totalDuration
 export const validateUnlockPeriod = (field: number, form: LinearVestingForm) => {
-  const totalDurationSeconds = durationSeconds(form.totalDurationType) * form.totalDuration;
+  const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
   const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * field;
-  if (unlockPeriodValue < 1 || unlockPeriodValue > totalDurationSeconds) {
-    return 'Значение должно быть больше 0 и меньше либо равно общей продолжительности блокировки';
-  }
+  if (unlockPeriodValue < 1) return 'Значение должно быть больше 0';
+  if (unlockPeriodValue > totalDurationValue)
+    return 'Значение должно быть меньше либо равно общей продолжительности блокировки';
+  if (totalDurationValue % unlockPeriodValue !== 0)
+    return 'Общая продолжительность должна делиться без остатка на частоту разблокировки';
 };
 
 // cliffDuration >= 0
 // cliffDuration < totalDuration
 // cliffDuration mod unlockPeriod == 0
 export const validateCliffDuration = (field: number, form: LinearVestingForm) => {
-  const totalDurationSeconds = durationSeconds(form.totalDurationType) * form.totalDuration;
+  const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
   const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
   const cliffDdurationValue = durationSeconds(form.cliffDurationType) * field;
-
-  if (
-    cliffDdurationValue < 0 ||
-    cliffDdurationValue >= totalDurationSeconds ||
-    (cliffDdurationValue > 0 && cliffDdurationValue % unlockPeriodValue !== 0)
-  ) {
-    console.log(
-      { cliffDdurationValue, unlockPeriodValue },
-      cliffDdurationValue > 0 && cliffDdurationValue % unlockPeriodValue !== 0,
-    );
-    return 'Значение должно быть больше либо равно 0 и меньше либо равно общей продолжительности блокировки, делиться без остатка на частоту разблокировки';
-  }
+  if (cliffDdurationValue < 0) return 'Значение должно быть больше либо равно 0';
+  if (cliffDdurationValue >= totalDurationValue)
+    return 'Значение должно быть меньше общей продолжительности блокировки';
+  if (cliffDdurationValue > 0 && cliffDdurationValue % unlockPeriodValue !== 0)
+    return 'Значение должно быть делиться без остатка на частоту разблокировки';
 };
 
-export const getFriendlyVestingParams = (form: LinearVestingForm) => {
-  const totalDurationSeconds = durationSeconds(form.totalDurationType) * form.totalDuration;
+export const unlockPeriodHelperText = (form: LinearVestingForm) => {
+  const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
   const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
-  return [
-    `Жетоны отправленные на вестинг контракт начиная с ${form.startTime} или ранее будут заблокированы`,
-    `Общая продолжительность блокировки составит ${form.totalDuration} (${durationLocale2(form.totalDurationType)})`,
-    `Частота разблокировки составит ${form.unlockPeriod} (${durationLocale2(form.unlockPeriodType)})`,
-    `Вся сумма депозита будет разбита на ${totalDurationSeconds / unlockPeriodValue} части/ей`,
-    `Одна часть выплат состалвяет ~ ${(100 / (totalDurationSeconds / unlockPeriodValue)).toPrecision(4)} % от общего депозита`,
-    `Вывод жетонов может осуществить только владелец кошелька по адресу ${form.ownerAddress}`,
-  ];
+  return `Депозит будет разбит на ${totalDurationValue / unlockPeriodValue} частей, где одна часть выплат составит ~ ${(100 / (totalDurationValue / unlockPeriodValue)).toPrecision(4)} % от общего депозита`;
+};
+
+export const cliffPeriodHelperText = (form: LinearVestingForm) => {
+  const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
+  const cliffDurationValue = durationSeconds(form.cliffDurationType) * form.cliffDuration;
+  if (cliffDurationValue === 0) return `Клифф период отключен`;
+  return `По окончании клифа первая выплата составит ${(100 / (totalDurationValue / cliffDurationValue)).toPrecision(4)} % от общего депозита`;
 };
 
 export const getAddress = (s: string) => {

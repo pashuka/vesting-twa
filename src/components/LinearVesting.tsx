@@ -1,8 +1,5 @@
-import { useTonConnect } from '../hooks/useTonConnect';
-
-import { InfoOutlined, WarningOutlined } from '@mui/icons-material';
+import { InfoOutlined } from '@mui/icons-material';
 import {
-  Alert,
   Button,
   Card,
   CardActions,
@@ -26,13 +23,15 @@ import 'dayjs/locale/ru'; // import locale
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { DEFAULT_TESTNET_WALLET_2 } from '../constants';
 import { useLinearVestingContract } from '../hooks/useLinearVestingContract';
+import { useTonConnect } from '../hooks/useTonConnect';
 import { LinearVestingForm, durationTypes } from '../types';
 import {
+  cliffPeriodHelperText,
   durationLocale,
   durationSeconds,
-  getFriendlyVestingParams,
   getInputDateFormat,
   today,
+  unlockPeriodHelperText,
   validateCliffDuration,
   validateOwnerAddress,
   validateTotalDuration,
@@ -48,10 +47,10 @@ export function LinearVesting() {
     register,
     handleSubmit,
     watch,
-    getValues,
     setValue,
     formState: { errors },
   } = useForm<LinearVestingForm>({
+    mode: 'all',
     defaultValues: {
       cliffDuration: 0,
       cliffDurationType: durationTypes[0],
@@ -116,7 +115,7 @@ export function LinearVesting() {
                       variant="plain"
                       // disabled={!!errors.totalDuration}
                       {...register('totalDurationType')}
-                      defaultValue={getValues('totalDurationType')}
+                      defaultValue={watch('totalDurationType')}
                       onChange={(_, value) => setValue('totalDurationType', value! as string)}
                       slotProps={{
                         listbox: {
@@ -160,7 +159,7 @@ export function LinearVesting() {
                       variant="plain"
                       // disabled={!!errors.unlockPeriod}
                       {...register('unlockPeriodType')}
-                      defaultValue={getValues('unlockPeriodType')}
+                      defaultValue={watch('unlockPeriodType')}
                       onChange={(_, value) => setValue('unlockPeriodType', value! as string)}
                       slotProps={{
                         listbox: {
@@ -183,9 +182,11 @@ export function LinearVesting() {
                   validate: validateUnlockPeriod,
                 })}
               />
-              {errors.unlockPeriod && (
-                <FormHelperText>{errors.unlockPeriod.message}</FormHelperText>
-              )}
+              <FormHelperText>
+                {errors.unlockPeriod
+                  ? errors.unlockPeriod.message
+                  : unlockPeriodHelperText(watch())}
+              </FormHelperText>
             </FormControl>
             {/*  */}
             <FormControl error={!!errors.cliffDuration}>
@@ -201,7 +202,7 @@ export function LinearVesting() {
                       variant="plain"
                       // disabled={!!errors.cliffDuration}
                       {...register('cliffDurationType')}
-                      defaultValue={getValues('cliffDurationType')}
+                      defaultValue={watch('cliffDurationType')}
                       onChange={(_, value) => setValue('cliffDurationType', value! as string)}
                       slotProps={{
                         listbox: {
@@ -224,9 +225,11 @@ export function LinearVesting() {
                   validate: validateCliffDuration,
                 })}
               />
-              {errors.cliffDuration && (
-                <FormHelperText>{errors.cliffDuration.message}</FormHelperText>
-              )}
+              <FormHelperText>
+                {errors.cliffDuration
+                  ? errors.cliffDuration.message
+                  : cliffPeriodHelperText(watch())}
+              </FormHelperText>
             </FormControl>
             {/*  */}
             <FormControl error={!!errors.ownerAddress}>
@@ -262,22 +265,6 @@ export function LinearVesting() {
               <Input placeholder="" type="text" disabled value={value ?? 'Loading...'} />
               <FormHelperText>This is a helper text.</FormHelperText>
             </FormControl> */}
-            <Alert
-              startDecorator={<WarningOutlined sx={{ color: `#8888`, width: 32, height: 32 }} />}
-              color="neutral"
-              variant="soft"
-            >
-              <div>
-                <Typography level="title-lg">Итоговые настройки</Typography>
-                <Typography level="body-sm">
-                  <List marker="circle" size="sm">
-                    {getFriendlyVestingParams(getValues()).map((m, i) => (
-                      <ListItem key={`deploy-message-${i}`}>{m}</ListItem>
-                    ))}
-                  </List>
-                </Typography>
-              </div>
-            </Alert>
             {deployMessages.length > 0 && (
               <List marker="circle" size="sm">
                 {deployMessages.map((m, i) => (
