@@ -90,7 +90,7 @@ export function useJettonContract() {
     setJettonMasterAddress,
     jettonAmount,
     setJettonAmount,
-    send: () => {
+    sendJettons: () => {
       if (!sender.address || !linearVestingContract) return;
       let forwardAmount = toNano('0.05');
       jettonWalletContract?.sendTransfer(
