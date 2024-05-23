@@ -1,3 +1,4 @@
+import { Close } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -14,6 +15,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useState } from 'react';
 import { useJettonContract } from '../../hooks/useSendJettonContract';
 import { useTonConnect } from '../../hooks/useTonConnect';
 import { TonviewerLink } from './tonviewer-link';
@@ -23,6 +25,7 @@ dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
 export function SendJettonsTab() {
+  const [pickBySelfVestingAddress, setPickBySelfVestingAddress] = useState(false);
   const { connected, network } = useTonConnect();
   const {
     linearVestingAddress,
@@ -37,6 +40,8 @@ export function SendJettonsTab() {
     jettonVestingBalance,
     setJettonAmount,
     sendJettons,
+    deployedVestingAddress,
+    setDeployedVestingAddress,
   } = useJettonContract();
 
   return (
@@ -46,9 +51,37 @@ export function SendJettonsTab() {
           <ListItem color="neutral">
             Вестинг контракт:{' '}
             {linearVestingAddress ? (
-              <TonviewerLink address={linearVestingAddress} />
+              <>
+                <TonviewerLink address={linearVestingAddress} />
+                {!pickBySelfVestingAddress && (
+                  <Button
+                    sx={{ mx: 1 }}
+                    variant="plain"
+                    onClick={() => setPickBySelfVestingAddress(true)}
+                  >
+                    изменить адрес
+                  </Button>
+                )}
+              </>
             ) : (
-              'Будет указан после деплоя вестинг-контракта из предыдущей вкладки'
+              <Button variant="plain" onClick={() => setPickBySelfVestingAddress(true)}>
+                указать адрес
+              </Button>
+            )}
+            {pickBySelfVestingAddress && (
+              <Input
+                endDecorator={
+                  <Button
+                    variant="plain"
+                    sx={{ px: 0.75 }}
+                    onClick={() => setPickBySelfVestingAddress(false)}
+                  >
+                    <Close />
+                  </Button>
+                }
+                value={deployedVestingAddress?.toString() || ''}
+                onChange={(e) => setDeployedVestingAddress(e.target.value)}
+              />
             )}
           </ListItem>
           <ListItem color="neutral">

@@ -1,11 +1,10 @@
 import { OpenInNew } from '@mui/icons-material';
 import { Link } from '@mui/joy';
+import { truncateLong } from '../../utils';
 
 type Props = {
   address: string;
 };
-
-const truncateLong = (s: string, n = 16) => (s.length > n ? s.slice(0, n - 1) + '...' : s);
 
 export const TonviewerLink = ({ address }: Props) => (
   <Link

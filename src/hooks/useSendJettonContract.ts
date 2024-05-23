@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Address, OpenedContract, fromNano, toNano } from '@ton/core';
 import { useState } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import Jetton from '../contracts/Jetton';
 import JettonWallet from '../contracts/JettonWallet';
 import { LinearVesting } from '../contracts/LinearVesting';
@@ -14,7 +14,9 @@ import { useTonConnect } from './useTonConnect';
 export function useJettonContract() {
   const { client } = useTonClient();
   const { sender, wallet } = useTonConnect();
-  const deployedVestingAddress = useRecoilValue(deployedVestingAddressState);
+  const [deployedVestingAddress, setDeployedVestingAddress] = useRecoilState(
+    deployedVestingAddressState,
+  );
   const [jettonMasterAddress, setJettonMasterAddress] = useRecoilState(jettonMasterAddressState);
   const [jettonAmount, setJettonAmount] = useState('');
   const [sending, setSending] = useState(false);
@@ -106,6 +108,8 @@ export function useJettonContract() {
     jettonWalletAddress: jettonWalletContract?.address,
     jettonAmount,
     setJettonAmount,
+    deployedVestingAddress,
+    setDeployedVestingAddress,
     sending,
     sendJettons: async () => {
       if (!linearVestingContract || !jettonWalletContract) {

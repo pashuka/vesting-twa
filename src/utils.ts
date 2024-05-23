@@ -4,6 +4,15 @@ import { CHAIN } from '@tonconnect/ui-react';
 import { START_TIME_OVERHEAD } from './constants';
 import { DurationType, LinearVestingConfig, LinearVestingForm } from './types';
 
+export const truncateLong = (s: string, l = 20, separator = '...') => {
+  if (s.length <= l) return s;
+  const sepLen = separator.length,
+    charsToShow = l - sepLen,
+    frontChars = Math.ceil(charsToShow / 2),
+    backChars = Math.floor(charsToShow / 2);
+  return s.substring(0, frontChars) + separator + s.substring(s.length - backChars);
+};
+
 export const sleep = (ms: number | undefined) =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);

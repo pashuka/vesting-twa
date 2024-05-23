@@ -9,7 +9,14 @@ import { DEFAULT_TESTNET_WALLET_2, VESTING_CONTRACT_CODE, WORKCHAIN } from '../c
 import { LinearVesting, linearVestingConfigToCell } from '../contracts/LinearVesting';
 import { deployedVestingAddressState } from '../state';
 import { LinearVestingConfig, LinearVestingForm, durationTypes } from '../types';
-import { debounce, getInputDateFormat, prepareLinearVestingConfig, sleep, today } from '../utils';
+import {
+  debounce,
+  getInputDateFormat,
+  prepareLinearVestingConfig,
+  sleep,
+  today,
+  truncateLong,
+} from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
@@ -86,7 +93,7 @@ export function useLinearVestingContract() {
     setDeployMessages((v) => [
       ...v,
       {
-        message: `Проверяем адрес вестинг контракта на основе текущих параметров: ${checkAddress.toString()}`,
+        message: `Проверяем адрес вестинг контракта на основе текущих параметров: ${truncateLong(checkAddress.toString())}`,
         color: 'neutral',
       },
     ]);
@@ -118,7 +125,7 @@ export function useLinearVestingContract() {
     setDeployMessages((v) => [
       ...v,
       {
-        message: `Деплой ${linearVesting?.address} в сеть ${(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}`,
+        message: `Деплой ${truncateLong(linearVesting?.address.toString() || '')} в сеть ${(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}`,
         color: 'success',
       },
     ]);
@@ -148,15 +155,16 @@ export function useLinearVestingContract() {
       code: VESTING_CONTRACT_CODE,
     };
     const checkAddress = contractAddress(WORKCHAIN, linearVestingStateInit);
+    const vestingAddress = truncateLong(checkAddress.toString());
 
     setVestingExistMessage({
-      message: `Поиск вестинг контракта: ${checkAddress.toString()} в сети...`,
+      message: `Поиск вестинг контракта: ${vestingAddress} в сети...`,
       color: 'neutral',
     });
     await sleep(1500);
     if (await client?.isContractDeployed(checkAddress)) {
       setVestingExistMessage({
-        message: `Вестинг контракт с текущими параметрами уже в сети: ${checkAddress.toString()}`,
+        message: `Вестинг контракт с текущими параметрами уже в сети: ${vestingAddress}`,
         color: 'success',
       });
       setDeployedAdress(checkAddress.toString());
@@ -164,7 +172,7 @@ export function useLinearVestingContract() {
     }
     await sleep(1500);
     setVestingExistMessage({
-      message: `Вестинг контракта ${checkAddress.toString()} с текущими параметрами в сети не обнаружено, значит будет еще деплой вестинг контракта перед отправкой жетонов`,
+      message: `Вестинг контракта ${vestingAddress} с текущими параметрами в сети не обнаружено, значит будет еще деплой вестинг контракта перед отправкой жетонов`,
       color: 'warning',
     });
     setCheckDeployed(false);

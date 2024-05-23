@@ -78,7 +78,7 @@ export function DeployVestingTab() {
           />
           {errors.ownerAddress && <FormHelperText>{errors.ownerAddress.message}</FormHelperText>}
           {vestingExistMessage && (
-            <FormHelperText color={vestingExistMessage.color}>
+            <FormHelperText color={vestingExistMessage.color} sx={{ wordWrap: 'break-word' }}>
               {vestingExistMessage.message}
             </FormHelperText>
           )}
