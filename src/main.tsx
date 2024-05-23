@@ -5,8 +5,7 @@ import { RecoilRoot } from 'recoil';
 import App from './App';
 import './index.css';
 // this manifest is used temporarily for development purposes
-const manifestUrl =
-  'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json';
+const manifestUrl = 'https://pashuka.github.io/vesting-twa/tonconnect-manifest.json';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
