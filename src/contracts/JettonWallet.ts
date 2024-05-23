@@ -2,6 +2,11 @@ import { Address, Cell, Contract, ContractProvider, SendMode, Sender, beginCell 
 import { fromNano } from '@ton/ton';
 
 export default class JettonWallet implements Contract {
+  constructor(
+    readonly address: Address,
+    readonly init?: { code: Cell; data: Cell },
+  ) {}
+
   async getBalance(provider: ContractProvider) {
     const { stack } = await provider.get('get_wallet_data', []);
     return fromNano(stack.readBigNumber());
@@ -26,6 +31,7 @@ export default class JettonWallet implements Contract {
       .storeMaybeRef(forwardPayload)
       .endCell();
   }
+
   async sendTransfer(
     provider: ContractProvider,
     via: Sender,
@@ -50,9 +56,4 @@ export default class JettonWallet implements Contract {
       value: value,
     });
   }
-
-  constructor(
-    readonly address: Address,
-    readonly init?: { code: Cell; data: Cell },
-  ) {}
 }

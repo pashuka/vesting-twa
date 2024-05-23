@@ -11,10 +11,6 @@ export function useTonConnect(): {
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
 
-  // useEffect(() => {
-  //   (async () => console.log(await tonConnectUI.getWallets()))();
-  // }, []);
-
   return {
     sender: {
       send: async (args: SenderArguments) => {

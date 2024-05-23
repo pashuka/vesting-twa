@@ -1,33 +1,30 @@
-import { Address, Cell, Contract, ContractProvider, Sender, beginCell, toNano } from '@ton/core';
+import { Address, Cell, Contract, ContractProvider, beginCell } from '@ton/core';
 
 export default class Jetton implements Contract {
-  async sendMintFromFaucet(provider: ContractProvider, via: Sender, receivingAddress: Address) {
-    const MINT = 21;
-    const INTERNAL_TRANSFER = 0x178d4519;
-    // @ts-ignore
-    const mintTokensBody = beginCell()
-      .storeUint(MINT, 32)
-      .storeUint(0, 64) // queryid
-      .storeAddress(receivingAddress)
-      .storeCoins(toNano('0.02'))
-      .storeRef(
-        // internal transfer message
-        beginCell()
-          .storeUint(INTERNAL_TRANSFER, 32)
-          .storeUint(0, 64)
-          .storeCoins(toNano(150))
-          .storeAddress(null)
-          .storeAddress(receivingAddress) // So we get a notification
-          .storeCoins(toNano('0.001'))
-          .storeBit(false) // forward_payload in this slice, not separate cell
-          .endCell(),
-      )
-      .endCell();
+  constructor(
+    readonly address: Address,
+    readonly init?: { code: Cell; data: Cell },
+  ) {}
 
-    await provider.internal(via, {
-      value: toNano('0.05'),
-      body: mintTokensBody,
-    });
+  async getJettonData(provider: ContractProvider) {
+    const res = await provider.get('get_jetton_data', []);
+    const totalSupply = res.stack.readBigNumber();
+    const mintable = res.stack.readBoolean();
+    const adminAddress = res.stack.readAddress();
+    const content = res.stack.readCell();
+    const walletCode = res.stack.readCell();
+    return {
+      totalSupply,
+      mintable,
+      adminAddress,
+      content,
+      walletCode,
+    };
+  }
+
+  async getContent(provider: ContractProvider) {
+    const res = await this.getJettonData(provider);
+    return res.content;
   }
 
   async getWalletAddress(provider: ContractProvider, forAddress: Address) {
@@ -37,9 +34,4 @@ export default class Jetton implements Contract {
 
     return stack.readAddress().toString();
   }
-
-  constructor(
-    readonly address: Address,
-    readonly init?: { code: Cell; data: Cell },
-  ) {}
 }
