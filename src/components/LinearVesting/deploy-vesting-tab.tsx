@@ -13,7 +13,7 @@ import {
   Select,
 } from '@mui/joy';
 import { CHAIN } from '@tonconnect/ui-react';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import { SubmitHandler } from 'react-hook-form';
 import { useLinearVestingContract } from '../../hooks/useLinearVestingContract';

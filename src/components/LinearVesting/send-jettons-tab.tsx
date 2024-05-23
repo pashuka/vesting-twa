@@ -10,7 +10,7 @@ import {
   ListItem,
 } from '@mui/joy';
 import { fromNano, toNano } from '@ton/core';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';

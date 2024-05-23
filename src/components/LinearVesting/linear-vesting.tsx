@@ -1,7 +1,7 @@
 import { CurrencyBitcoin, Paid, Token } from '@mui/icons-material';
 import { ListItemDecorator, Tab, TabList, TabPanel, Tabs, tabClasses } from '@mui/joy';
 import { TonConnectButton } from '@tonconnect/ui-react';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import { DeployVestingTab } from './deploy-vesting-tab';
 import { SendJettonsTab } from './send-jettons-tab';

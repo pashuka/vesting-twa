@@ -1,6 +1,6 @@
 import { Box, Button, FormControl, FormLabel, Input, List, ListItem } from '@mui/joy';
 import { fromNano } from '@ton/core';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
