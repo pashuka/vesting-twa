@@ -14,7 +14,7 @@ import * as dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { useJettonContract } from '../../hooks/useJettonContract';
+import { useJettonContract } from '../../hooks/useSendJettonContract';
 import { useTonConnect } from '../../hooks/useTonConnect';
 import { TonviewerLink } from './tonviewer-link';
 
@@ -38,60 +38,68 @@ export function SendJettonsTab() {
     setJettonAmount,
     sendJettons,
   } = useJettonContract();
-  const onSubmit = () => {
-    // sendDeploy(prepareLinearVestingConfig(data));
-  };
 
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
-      {queryVesting.isFetched && queryVesting.data && (
-        <Alert color="neutral">
-          <List marker="circle" size="sm">
-            <ListItem color="neutral">
-              Вестинг контракт:{' '}
-              {linearVestingAddress ? (
-                <TonviewerLink address={linearVestingAddress} />
-              ) : (
-                'Будет указан после деплоя вестинг-контракта из предыдущей вкладки'
-              )}
-            </ListItem>
-            <ListItem color="neutral">
-              Инвестор:{' '}
-              {queryVesting.data && (
-                <TonviewerLink address={queryVesting.data?.ownerAddress.toString()} />
-              )}
-            </ListItem>
-            <ListItem color="neutral">
-              Начало вестинга: {dayjs(queryVesting.data?.startTime * 1000).fromNow()} (
-              {dayjs(queryVesting.data?.startTime * 1000).format('DD/MM/YYYY')})
-            </ListItem>
-            <ListItem color="neutral">
-              Продолжительность:{' '}
-              {dayjs.duration(queryVesting.data?.totalDuration, 'second').humanize()}
-            </ListItem>
-            <ListItem color="neutral">
-              Период блокировки:{' '}
-              {dayjs.duration(queryVesting.data?.unlockPeriod, 'second').humanize()}
-            </ListItem>
-            <ListItem color="neutral">
-              Холодный перод (клифф):{' '}
-              {queryVesting.data?.cliffDuration > 0
+      <Alert color="neutral">
+        <List marker="circle" size="sm">
+          <ListItem color="neutral">
+            Вестинг контракт:{' '}
+            {linearVestingAddress ? (
+              <TonviewerLink address={linearVestingAddress} />
+            ) : (
+              'Будет указан после деплоя вестинг-контракта из предыдущей вкладки'
+            )}
+          </ListItem>
+          <ListItem color="neutral">
+            Инвестор:{' '}
+            {queryVesting.data && (
+              <TonviewerLink address={queryVesting.data?.ownerAddress.toString()} />
+            )}
+          </ListItem>
+          <ListItem color="neutral">
+            Начало вестинга:{' '}
+            {!queryVesting.data ? '' : dayjs(queryVesting.data?.startTime * 1000).fromNow()} (
+            {!queryVesting.data
+              ? '...'
+              : dayjs(queryVesting.data?.startTime * 1000).format('DD/MM/YYYY')}
+            )
+          </ListItem>
+          <ListItem color="neutral">
+            Продолжительность:{' '}
+            {!queryVesting.data
+              ? '...'
+              : dayjs.duration(queryVesting.data?.totalDuration, 'second').humanize()}
+          </ListItem>
+          <ListItem color="neutral">
+            Период блокировки:{' '}
+            {!queryVesting.data
+              ? '...'
+              : dayjs.duration(queryVesting.data?.unlockPeriod, 'second').humanize()}
+          </ListItem>
+          <ListItem color="neutral">
+            Холодный перод (клифф):{' '}
+            {!queryVesting.data
+              ? '...'
+              : queryVesting.data?.cliffDuration > 0
                 ? dayjs.duration(queryVesting.data?.cliffDuration, 'second').humanize()
                 : 'отключен'}
-            </ListItem>
-            <ListItem color="neutral">
-              Всего получено жетонов: {fromNano(queryVesting.data?.totalDeposited).toString()}
-            </ListItem>
-            <ListItem color="neutral">
-              Всего выведено жетонов: {fromNano(queryVesting.data?.totalWithdrawals).toString()}
-            </ListItem>
-            <ListItem color="neutral">
-              Баланс вестинг-кошелка:{' '}
-              {jettonVestingBalance ? jettonVestingBalance.toString() : ' ? '}
-            </ListItem>
-          </List>
-        </Alert>
-      )}
+          </ListItem>
+          <ListItem color="neutral">
+            Всего получено жетонов:{' '}
+            {!queryVesting.data ? '...' : fromNano(queryVesting.data?.totalDeposited).toString()}
+          </ListItem>
+          <ListItem color="neutral">
+            Всего выведено жетонов:{' '}
+            {!queryVesting.data ? '...' : fromNano(queryVesting.data?.totalWithdrawals).toString()}
+          </ListItem>
+          <ListItem color="neutral">
+            Баланс вестинг-кошелка:{' '}
+            {!jettonVestingBalance ? '...' : jettonVestingBalance.toString()}
+          </ListItem>
+        </List>
+      </Alert>
+
       <FormControl>
         <FormLabel>Мастер контракт жетонв (адрес контракта)</FormLabel>
         <Input

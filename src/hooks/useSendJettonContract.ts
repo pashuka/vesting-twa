@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { Address, OpenedContract, fromNano, toNano } from '@ton/core';
-import { useTonConnectUI } from '@tonconnect/ui-react';
 import { useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import Jetton from '../contracts/Jetton';
@@ -14,8 +13,7 @@ import { useTonConnect } from './useTonConnect';
 
 export function useJettonContract() {
   const { client } = useTonClient();
-  const [tonConnectUI] = useTonConnectUI();
-  const { sender, network, wallet } = useTonConnect();
+  const { sender, wallet } = useTonConnect();
   const deployedVestingAddress = useRecoilValue(deployedVestingAddressState);
   const [jettonMasterAddress, setJettonMasterAddress] = useRecoilState(jettonMasterAddressState);
   const [jettonAmount, setJettonAmount] = useState('');
