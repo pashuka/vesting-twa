@@ -23,7 +23,7 @@ export function useTonConnect(): {
             {
               address: args.to.toString(),
               amount: args.value.toString(),
-              stateInit: stateCell.toBoc().toString('base64'),
+              stateInit: args.init ? stateCell.toBoc().toString('base64') : undefined,
               payload: args.body?.toBoc().toString('base64'),
             },
           ],

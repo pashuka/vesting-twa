@@ -142,6 +142,40 @@ export const validateOwnerAddress =
     }
   };
 
+type JettonMetaDataKeys = 'name' | 'description' | 'image' | 'symbol' | 'image_data' | 'decimals';
+const jettonOnChainMetadataSpec: {
+  [key in JettonMetaDataKeys]: 'utf8' | 'ascii' | undefined;
+} = {
+  name: 'utf8',
+  description: 'utf8',
+  image: 'ascii',
+  decimals: 'utf8',
+  symbol: 'utf8',
+  image_data: undefined,
+};
+
+export const debounce = (func: () => void, wait: number, immediate?: boolean) => {
+  let timeout: number | null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (...args: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const context = this;
+    const later = () => {
+      timeout = null;
+      if (!immediate) {
+        func.apply(context, args);
+      }
+    };
+    const callNow = immediate && !timeout;
+    if (timeout) window.clearTimeout(timeout);
+    timeout = window.setTimeout(later, wait);
+    if (callNow) {
+      func.apply(context, args);
+    }
+  };
+};
+
 export async function waitForTransaction(
   seqno: number,
   walletContract: OpenedContract<WalletContractV4>,
@@ -153,4 +187,17 @@ export async function waitForTransaction(
     currentSeqno = await walletContract.getSeqno();
   }
   console.log(`Tx (seqno: ${seqno}) confirmed!`);
+}
+
+export async function waitForSeqno(wallet: OpenedContract<WalletContractV4>) {
+  const seqnoBefore = await wallet.getSeqno();
+
+  return async () => {
+    for (let attempt = 0; attempt < 25; attempt++) {
+      await sleep(3000);
+      const seqnoAfter = await wallet.getSeqno();
+      if (seqnoAfter > seqnoBefore) return;
+    }
+    throw new Error('Timeout');
+  };
 }

@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Divider,
@@ -77,20 +78,12 @@ export function DeployVestingTab() {
           />
           {errors.ownerAddress && <FormHelperText>{errors.ownerAddress.message}</FormHelperText>}
           {vestingExistMessage && (
-            <FormHelperText sx={{ color: vestingExistMessage.color }}>
+            <FormHelperText color={vestingExistMessage.color}>
               {vestingExistMessage.message}
             </FormHelperText>
           )}
         </FormControl>
-        {deployMessages.length > 0 && (
-          <List marker="circle" size="sm">
-            {deployMessages.map((m, i) => (
-              <ListItem key={`deploy-message-${i}`} color={m.color}>
-                {m.message}
-              </ListItem>
-            ))}
-          </List>
-        )}
+
         <Divider />
         {/*  */}
         <FormControl>
@@ -240,6 +233,18 @@ export function DeployVestingTab() {
             {errors.cliffDuration ? errors.cliffDuration.message : cliffPeriodHelperText(watch())}
           </FormHelperText>
         </FormControl>
+        {deployMessages.length > 0 && (
+          <Alert color="neutral">
+            <List marker="circle" size="sm">
+              {deployMessages.map((m, i) => (
+                <ListItem key={`deploy-message-${i}`} color={m.color}>
+                  {m.message}
+                </ListItem>
+              ))}
+            </List>
+          </Alert>
+        )}
+        {!connected && <Alert color="danger">Подключите кошелек для отправки контракта</Alert>}
         <Button type="submit" disabled={!isValidForm || !connected || deploying || checkDeployed}>
           Отправить контракт в{' '}
           {(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}

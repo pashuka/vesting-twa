@@ -6,6 +6,14 @@ export default class Jetton implements Contract {
     readonly init?: { code: Cell; data: Cell },
   ) {}
 
+  async getWalletAddress(provider: ContractProvider, forAddress: Address) {
+    const { stack } = await provider.get('get_wallet_address', [
+      { type: 'slice', cell: beginCell().storeAddress(forAddress).endCell() },
+    ]);
+
+    return stack.readAddress().toString();
+  }
+
   async getJettonData(provider: ContractProvider) {
     const res = await provider.get('get_jetton_data', []);
     const totalSupply = res.stack.readBigNumber();
@@ -25,13 +33,5 @@ export default class Jetton implements Contract {
   async getContent(provider: ContractProvider) {
     const res = await this.getJettonData(provider);
     return res.content;
-  }
-
-  async getWalletAddress(provider: ContractProvider, forAddress: Address) {
-    const { stack } = await provider.get('get_wallet_address', [
-      { type: 'slice', cell: beginCell().storeAddress(forAddress).endCell() },
-    ]);
-
-    return stack.readAddress().toString();
   }
 }

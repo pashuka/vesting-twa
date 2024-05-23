@@ -1,4 +1,4 @@
-import { Address, Cell, Contract, ContractProvider, SendMode, Sender, beginCell } from '@ton/core';
+import { Address, Cell, Contract, ContractProvider, beginCell } from '@ton/core';
 import { fromNano } from '@ton/ton';
 
 export default class JettonWallet implements Contract {
@@ -30,30 +30,5 @@ export default class JettonWallet implements Contract {
       .storeCoins(forward_ton_amount)
       .storeMaybeRef(forwardPayload)
       .endCell();
-  }
-
-  async sendTransfer(
-    provider: ContractProvider,
-    via: Sender,
-    value: bigint,
-    jetton_amount: bigint,
-    to: Address,
-    responseAddress: Address,
-    customPayload: Cell | null,
-    forward_ton_amount: bigint,
-    forwardPayload: Cell | null,
-  ) {
-    await provider.internal(via, {
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
-      body: JettonWallet.transferMessage(
-        jetton_amount,
-        to,
-        responseAddress,
-        customPayload,
-        forward_ton_amount,
-        forwardPayload,
-      ),
-      value: value,
-    });
   }
 }

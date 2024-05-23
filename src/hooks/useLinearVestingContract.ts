@@ -2,12 +2,14 @@ import { ColorPaletteProp } from '@mui/joy';
 import { useQuery } from '@tanstack/react-query';
 import { Address, OpenedContract, StateInit, contractAddress, toNano } from '@ton/core';
 import { CHAIN } from '@tonconnect/ui-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useRecoilState } from 'recoil';
 import { DEFAULT_TESTNET_WALLET_2, VESTING_CONTRACT_CODE, WORKCHAIN } from '../constants';
 import { LinearVesting, linearVestingConfigToCell } from '../contracts/LinearVesting';
+import { deployedVestingAddressState } from '../state';
 import { LinearVestingConfig, LinearVestingForm, durationTypes } from '../types';
-import { getInputDateFormat, prepareLinearVestingConfig, sleep, today } from '../utils';
+import { debounce, getInputDateFormat, prepareLinearVestingConfig, sleep, today } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
@@ -20,8 +22,7 @@ type FormHelperTextMessage = {
 export function useLinearVestingContract() {
   const { client } = useTonClient();
   const { sender, network } = useTonConnect();
-
-  const [deployedAdress, setDeployedAdress] = useState<string>();
+  const [deployedAdress, setDeployedAdress] = useRecoilState(deployedVestingAddressState);
   const [checkDeployed, setCheckDeployed] = useState(true);
   const [deploying, setDeploying] = useState(false);
   const [vestingExistMessage, setVestingExistMessage] = useState<FormHelperTextMessage>();
@@ -138,39 +139,47 @@ export function useLinearVestingContract() {
 
     // setDeploying(false);
   };
+  const checkDeploymentStatus = async () => {
+    setCheckDeployed(true);
+    const config = prepareLinearVestingConfig(watch());
+    const initialData = linearVestingConfigToCell(config);
+    const linearVestingStateInit: StateInit = {
+      data: initialData,
+      code: VESTING_CONTRACT_CODE,
+    };
+    const checkAddress = contractAddress(WORKCHAIN, linearVestingStateInit);
+
+    setVestingExistMessage({
+      message: `Поиск вестинг контракта: ${checkAddress.toString()} в сети...`,
+      color: 'neutral',
+    });
+    await sleep(1500);
+    if (await client?.isContractDeployed(checkAddress)) {
+      setVestingExistMessage({
+        message: `Вестинг контракт с текущими параметрами уже в сети: ${checkAddress.toString()}`,
+        color: 'success',
+      });
+      setDeployedAdress(checkAddress.toString());
+      return;
+    }
+    await sleep(1500);
+    setVestingExistMessage({
+      message: `Вестинг контракта ${checkAddress.toString()} с текущими параметрами в сети не обнаружено, значит будет еще деплой вестинг контракта перед отправкой жетонов`,
+      color: 'warning',
+    });
+    setCheckDeployed(false);
+  };
+
+  const debouncedHandleCheckDeployment = useMemo(
+    () => debounce(checkDeploymentStatus, 2500, true),
+    [checkDeploymentStatus],
+  );
 
   useEffect(() => {
-    (async () => {
-      setCheckDeployed(true);
-      const config = prepareLinearVestingConfig(watch());
-      const initialData = linearVestingConfigToCell(config);
-      const linearVestingStateInit: StateInit = {
-        data: initialData,
-        code: VESTING_CONTRACT_CODE,
-      };
-      const checkAddress = contractAddress(WORKCHAIN, linearVestingStateInit);
-
-      setVestingExistMessage({
-        message: `Поиск вестинг контракта: ${checkAddress.toString()} в сети...`,
-        color: 'neutral',
-      });
-      await sleep(1500);
-      if (await client?.isContractDeployed(checkAddress)) {
-        setVestingExistMessage({
-          message: `Вестинг контракт с текущими параметрами уже в сети`,
-          color: 'success',
-        });
-        setDeployedAdress(checkAddress.toString());
-        return;
-      }
-      await sleep(1500);
-      setVestingExistMessage({
-        message: `Вестинг контракта с текущими параметрами в сети не обнаружено, значит будет еще деплой вестинг контракта перед отправкой жетонов`,
-        color: 'warning',
-      });
-      setCheckDeployed(false);
-    })();
+    if (!client) return;
+    debouncedHandleCheckDeployment();
   }, [
+    client,
     startTime,
     totalDuration,
     totalDurationType,
