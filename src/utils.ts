@@ -196,3 +196,21 @@ export async function waitForContractDeploy(address: Address, client: TonClient)
   }
   throw new Error('Timeout');
 }
+
+const getSeqNo = async (client: TonClient, wallet: Address) => {
+  const getMethodResult = await client.runMethod(wallet, 'seqno');
+  return getMethodResult.stack.readNumber();
+};
+
+export async function waitForSeqno(client: TonClient, wallet: Address) {
+  const seqnoBefore = await getSeqNo(client, wallet);
+
+  return async () => {
+    for (let attempt = 0; attempt < 25; attempt++) {
+      await sleep(3000);
+      const seqnoAfter = await getSeqNo(client, wallet);
+      if (seqnoAfter > seqnoBefore) return;
+    }
+    throw new Error('Timeout');
+  };
+}

@@ -168,6 +168,7 @@ export function SendJettonsTab() {
       {!connected && <Alert color="danger">Подключите кошелек для отправки жетонов</Alert>}
       <Button
         type="submit"
+        loading={sending}
         disabled={
           !connected ||
           !queryBalance.data ||

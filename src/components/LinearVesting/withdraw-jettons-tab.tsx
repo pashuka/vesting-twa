@@ -94,6 +94,7 @@ export function WithdrawJettonsTab() {
       )}
       <Button
         type="submit"
+        loading={sending}
         disabled={
           queryVesting.isFetching ||
           !queryVesting.data ||

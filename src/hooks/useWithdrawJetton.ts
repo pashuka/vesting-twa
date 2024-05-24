@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { OpenedContract, beginCell, toNano } from '@ton/core';
+import { Address, OpenedContract, beginCell, toNano } from '@ton/core';
 import { useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { LinearVesting, Opcodes } from '../contracts/LinearVesting';
 import { withdrawVestingAddressState } from '../state';
-import { getAddress } from '../utils';
+import { getAddress, waitForSeqno } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
 
 export function useWithdrawJetton() {
   const { client } = useTonClient();
-  const { sender } = useTonConnect();
+  const { sender, wallet } = useTonConnect();
   const [withdrawVestingAddress, setWithdrawVestingAddress] = useRecoilState(
     withdrawVestingAddressState,
   );
@@ -41,15 +41,23 @@ export function useWithdrawJetton() {
     setWithdrawVestingAddress,
     sending,
     withdrawJettons: async () => {
-      if (!linearVestingContract) {
+      if (!client || !wallet || !linearVestingContract) {
         return;
       }
+
       setSending(true);
+      const waiter = await waitForSeqno(client, Address.parse(wallet));
+
       await sender?.send({
         to: linearVestingContract.address,
         value: toNano('0.1'),
         body: beginCell().storeUint(Opcodes.withdraw, 32).storeUint(0, 64).endCell(),
       });
+
+      try {
+        await waiter();
+      } catch (error) {}
+
       setSending(false);
     },
   };

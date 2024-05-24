@@ -6,7 +6,7 @@ import Jetton from '../contracts/Jetton';
 import JettonWallet from '../contracts/JettonWallet';
 import { LinearVesting } from '../contracts/LinearVesting';
 import { deployedVestingAddressState, jettonMasterAddressState } from '../state';
-import { getAddress } from '../utils';
+import { getAddress, waitForSeqno } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
@@ -112,11 +112,13 @@ export function useJettonContract() {
     setDeployedVestingAddress,
     sending,
     sendJettons: async () => {
-      if (!linearVestingContract || !jettonWalletContract) {
+      if (!client || !wallet || !linearVestingContract || !jettonWalletContract) {
         return;
       }
       setSending(true);
-      const forwardAmount = toNano('0.05');
+
+      const waiter = await waitForSeqno(client, Address.parse(wallet));
+
       await sender?.send({
         to: jettonWalletContract.address,
         value: toNano('0.1'),
@@ -125,10 +127,15 @@ export function useJettonContract() {
           linearVestingContract.address,
           jettonWalletContract.address,
           null,
-          forwardAmount,
+          toNano('0.05'),
           null,
         ),
       });
+
+      try {
+        await waiter();
+      } catch (error) {}
+
       setUpdateBalance(true);
       setUpdateVestingData(true);
       setSending(false);
