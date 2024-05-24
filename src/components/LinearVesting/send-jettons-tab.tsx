@@ -33,7 +33,7 @@ export function SendJettonsTab() {
     jettonMasterAddress,
     setJettonMasterAddress,
     queryBalance,
-    queryData,
+    queryJettonMetaData,
     queryVesting,
     jettonAmount,
     sending,
@@ -128,7 +128,8 @@ export function SendJettonsTab() {
           </ListItem>
           <ListItem color="neutral">
             Баланс вестинг-кошелка:{' '}
-            {!jettonVestingBalance ? '...' : jettonVestingBalance.toString()}
+            {!jettonVestingBalance ? '...' : jettonVestingBalance.toString()}{' '}
+            {queryJettonMetaData.data?.content?.symbol}
           </ListItem>
         </List>
       </Alert>
@@ -150,7 +151,11 @@ export function SendJettonsTab() {
       <FormControl disabled>
         <FormLabel>Баланс вашего кошелька</FormLabel>
         <Input
-          value={queryBalance.data ? `${Number(queryBalance.data).toLocaleString()} JETTONS` : ''}
+          value={
+            queryBalance.data
+              ? `${Number(queryBalance.data).toLocaleString()} ${queryJettonMetaData.data?.content?.symbol}`
+              : ''
+          }
         />
       </FormControl>
       <FormControl disabled={!connected || !queryBalance.data} error={Number(jettonAmount) <= 0}>

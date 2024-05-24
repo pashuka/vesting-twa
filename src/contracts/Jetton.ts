@@ -21,6 +21,7 @@ export default class Jetton implements Contract {
     const adminAddress = res.stack.readAddress();
     const content = res.stack.readCell();
     const walletCode = res.stack.readCell();
+
     return {
       totalSupply,
       mintable,
@@ -28,10 +29,5 @@ export default class Jetton implements Contract {
       content,
       walletCode,
     };
-  }
-
-  async getContent(provider: ContractProvider) {
-    const res = await this.getJettonData(provider);
-    return res.content;
   }
 }

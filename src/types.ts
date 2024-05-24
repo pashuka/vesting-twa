@@ -26,3 +26,13 @@ export type FormHelperTextMessage = {
   message: string;
   color: ColorPaletteProp;
 };
+
+export interface JettonMetadata {
+  name: string;
+  symbol: string;
+  description?: string;
+  decimals?: number | string;
+  image?: string;
+  image_data?: string;
+  uri?: string;
+}

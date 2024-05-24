@@ -5,6 +5,7 @@ import { useRecoilState } from 'recoil';
 import Jetton from '../contracts/Jetton';
 import JettonWallet from '../contracts/JettonWallet';
 import { LinearVesting } from '../contracts/LinearVesting';
+import { getJettonMetadata } from '../metadata';
 import { deployedVestingAddressState, jettonMasterAddressState } from '../state';
 import { getAddress, waitForSeqno } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
@@ -47,6 +48,7 @@ export function useJettonContract() {
     const jettonVestingAddress = await jettonMasterContract!.getWalletAddress(
       linearVestingContract.address,
     );
+
     return client!.open(
       new JettonWallet(Address.parse(jettonVestingAddress)),
     ) as OpenedContract<JettonWallet>;
@@ -71,15 +73,16 @@ export function useJettonContract() {
     },
   });
 
-  const queryData = useQuery({
+  const queryJettonMetaData = useQuery({
     queryKey: ['jetton-master-data', jettonMasterContract],
     // refetchInterval: 5 * 1000,
     queryFn: async () => {
       if (!jettonMasterContract) return null;
       const data = await jettonMasterContract.getJettonData();
+
       return {
         adminAddress: data.adminAddress.toString(),
-        // content: await loadJettonContent(data.content),
+        content: await getJettonMetadata(data.content),
         mintable: data.mintable,
         totalSupply: fromNano(data.totalSupply),
       };
@@ -100,7 +103,7 @@ export function useJettonContract() {
   return {
     queryVesting,
     queryBalance,
-    queryData,
+    queryJettonMetaData,
     jettonVestingBalance: jettonVesingIsFetching ? null : jettonVestingData,
     linearVestingAddress: linearVestingContract?.address.toString(),
     jettonMasterAddress,
