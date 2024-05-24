@@ -129,7 +129,10 @@ export function SendJettonsTab() {
           <ListItem color="neutral">
             Баланс вестинг-кошелка:{' '}
             {!jettonVestingBalance ? '...' : jettonVestingBalance.toString()}{' '}
-            {queryJettonMetaData.data?.content?.symbol}
+            {jettonVestingBalance && queryJettonMetaData.data?.content?.symbol}
+            {jettonVestingBalance && queryJettonMetaData.data?.content?.name
+              ? ` [ ${queryJettonMetaData.data?.content?.name} ]`
+              : ''}
           </ListItem>
         </List>
       </Alert>
@@ -157,6 +160,12 @@ export function SendJettonsTab() {
               : ''
           }
         />
+        {queryJettonMetaData.data?.content?.name && (
+          <FormHelperText>
+            {queryJettonMetaData.data?.content?.name} [{' '}
+            {queryJettonMetaData.data?.content?.description} ]
+          </FormHelperText>
+        )}
       </FormControl>
       <FormControl disabled={!connected || !queryBalance.data} error={Number(jettonAmount) <= 0}>
         <FormLabel>Укажите сумму жетонов</FormLabel>
