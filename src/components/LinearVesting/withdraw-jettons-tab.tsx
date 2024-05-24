@@ -1,5 +1,5 @@
-import { Box, Button, FormControl, FormLabel, Input, List, ListItem } from '@mui/joy';
-import { fromNano } from '@ton/core';
+import { Alert, Box, Button, FormControl, FormLabel, Input, List, ListItem } from '@mui/joy';
+import { Address, fromNano } from '@ton/core';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
@@ -13,7 +13,8 @@ dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
 export function WithdrawJettonsTab() {
-  const { connected, network } = useTonConnect();
+  const { connected, wallet } = useTonConnect();
+  const walletAddress = wallet ? Address.parse(wallet).toString() : undefined;
   const {
     linearVestingAddress,
     withdrawVestingAddress,
@@ -25,7 +26,7 @@ export function WithdrawJettonsTab() {
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
       <FormControl>
-        <FormLabel>Вестинг контракт (адрес контракта)</FormLabel>
+        <FormLabel>Укажите адрес вестинг контракта</FormLabel>
         <Input
           type="text"
           placeholder="укажите адрес вестинг контракта"
@@ -43,7 +44,7 @@ export function WithdrawJettonsTab() {
           )}
         </ListItem>
         <ListItem color="neutral">
-          Инвестор:{' '}
+          Правообладатель (инвестор):{' '}
           {queryVesting.data && (
             <TonviewerLink address={queryVesting.data?.ownerAddress.toString()} />
           )}
@@ -85,9 +86,23 @@ export function WithdrawJettonsTab() {
           {!queryVesting.data ? '...' : fromNano(queryVesting.data?.totalWithdrawals).toString()}
         </ListItem>
       </List>
+      {!connected && <Alert color="danger">Подключите кошелек для вывода жетонов</Alert>}
+      {queryVesting.data && walletAddress !== queryVesting.data.ownerAddress.toString() && (
+        <Alert color="danger" sx={{ py: 1 }}>
+          Вы не можете вывести жетоны на свой кошелек так как не являетесь правообладателем
+        </Alert>
+      )}
       <Button
         type="submit"
-        disabled={!connected || !withdrawVestingAddress || !linearVestingAddress || sending}
+        disabled={
+          queryVesting.isFetching ||
+          !queryVesting.data ||
+          walletAddress !== queryVesting.data.ownerAddress.toString() ||
+          !connected ||
+          !withdrawVestingAddress ||
+          !linearVestingAddress ||
+          sending
+        }
         onClick={withdrawJettons}
       >
         Вывод жетонов на кошелек

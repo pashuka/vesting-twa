@@ -33,6 +33,8 @@ import {
   validateUnlockPeriod,
 } from '../../utils';
 import { FormLabelTooltip } from '../FormHelpers';
+import { CircularProgress } from '../circular-progress';
+import { TonviewerLink } from './tonviewer-link';
 
 dayjs.locale('ru');
 
@@ -62,7 +64,7 @@ export function DeployVestingTab() {
     <form onSubmit={handleSubmit(onSubmit)}>
       <Box sx={{ display: 'grid', gap: 2 }}>
         {/*  */}
-        <FormControl error={!!errors.ownerAddress}>
+        <FormControl disabled={!connected || deploying} error={!!errors.ownerAddress}>
           <FormLabel>
             Адрес кошелька инвестора
             <FormLabelTooltip title="Адрес кошелька инвестора или того, кто будет иметь право на вывод жетонов из вестинг контракта после периода разблокировки на свой кошелек." />
@@ -74,19 +76,11 @@ export function DeployVestingTab() {
               required: true,
               validate: validateOwnerAddress(network),
             })}
-            disabled={!connected || deploying}
           />
           {errors.ownerAddress && <FormHelperText>{errors.ownerAddress.message}</FormHelperText>}
-          {vestingExistMessage && (
-            <FormHelperText color={vestingExistMessage.color} sx={{ wordWrap: 'break-word' }}>
-              {vestingExistMessage.message}
-            </FormHelperText>
-          )}
         </FormControl>
-
-        <Divider />
         {/*  */}
-        <FormControl>
+        <FormControl disabled={!connected || deploying}>
           <FormLabel>
             Начало вестинга
             <FormLabelTooltip
@@ -99,12 +93,11 @@ export function DeployVestingTab() {
             type="date"
             {...register('startTime', { required: true })}
             slotProps={{ input: { min: getInputDateFormat(addDays(today(), -2)) } }}
-            disabled={!connected || deploying}
           />
           {errors.startTime && <FormHelperText>{errors.startTime.message}</FormHelperText>}
         </FormControl>
         {/*  */}
-        <FormControl error={!!errors.totalDuration}>
+        <FormControl disabled={!connected || deploying} error={!!errors.totalDuration}>
           <FormLabel slotProps={{ root: { htmlFor: 'totalDuration' } }}>
             Общая продолжительность блокировки
             <FormLabelTooltip title="Общая продолжительность блокировки жетонов, начиная со времени начала вестинг периода." />
@@ -140,12 +133,11 @@ export function DeployVestingTab() {
               required: true,
               validate: validateTotalDuration,
             })}
-            disabled={!connected || deploying}
           />
           {errors.totalDuration && <FormHelperText>{errors.totalDuration.message}</FormHelperText>}
         </FormControl>
         {/*  */}
-        <FormControl error={!!errors.unlockPeriod}>
+        <FormControl disabled={!connected || deploying} error={!!errors.unlockPeriod}>
           <FormLabel>
             Частота разблокировки
             <FormLabelTooltip
@@ -184,14 +176,13 @@ export function DeployVestingTab() {
               required: true,
               validate: validateUnlockPeriod,
             })}
-            disabled={!connected || deploying}
           />
           <FormHelperText>
             {errors.unlockPeriod ? errors.unlockPeriod.message : unlockPeriodHelperText(watch())}
           </FormHelperText>
         </FormControl>
         {/*  */}
-        <FormControl error={!!errors.cliffDuration}>
+        <FormControl disabled={!connected || deploying} error={!!errors.cliffDuration}>
           <FormLabel>
             Холодный период
             <FormLabelTooltip title="Холодный период или клиф (cliff period). Продолжительность холодного периода (ноль, если клифф не нужен) - период после начала вестинга, когда вестинг накапливается, но не может быть отозван, вся накопленная сумма будет доступна для вывода после окончания периода клиффа." />
@@ -227,7 +218,6 @@ export function DeployVestingTab() {
               required: true,
               validate: validateCliffDuration,
             })}
-            disabled={!connected || deploying}
           />
           <FormHelperText>
             {errors.cliffDuration ? errors.cliffDuration.message : cliffPeriodHelperText(watch())}
@@ -238,14 +228,39 @@ export function DeployVestingTab() {
             <List marker="circle" size="sm">
               {deployMessages.map((m, i) => (
                 <ListItem key={`deploy-message-${i}`} color={m.color}>
-                  {m.message}
+                  {m.message} {m.address && <TonviewerLink address={m.address} />}
                 </ListItem>
               ))}
             </List>
           </Alert>
         )}
         {!connected && <Alert color="danger">Подключите кошелек для отправки контракта</Alert>}
-        <Button type="submit" disabled={!isValidForm || !connected || deploying || checkDeployed}>
+        <FormControl>
+          {vestingExistMessage && (
+            <FormHelperText color={vestingExistMessage.color} sx={{ wordWrap: 'break-word' }}>
+              {vestingExistMessage.loading && (
+                <CircularProgress
+                  sx={{
+                    mx: 1,
+                    '--CircularProgress-size': '21px',
+                    '--CircularProgress-trackThickness': '3px',
+                    '--CircularProgress-progressThickness': '3px',
+                    bgcolor: 'background.surface',
+                  }}
+                />
+              )}
+              {vestingExistMessage.message}{' '}
+              {vestingExistMessage.address && (
+                <TonviewerLink address={vestingExistMessage.address} />
+              )}
+            </FormHelperText>
+          )}
+        </FormControl>
+        <Button
+          loading={deploying}
+          type="submit"
+          disabled={!isValidForm || !connected || deploying || checkDeployed}
+        >
           Отправить контракт в{' '}
           {(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}
         </Button>

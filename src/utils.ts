@@ -1,5 +1,5 @@
-import { Address, OpenedContract } from '@ton/core';
-import { WalletContractV4 } from '@ton/ton';
+import { Address } from '@ton/core';
+import { TonClient } from '@ton/ton';
 import { CHAIN } from '@tonconnect/ui-react';
 import { START_TIME_OVERHEAD } from './constants';
 import { DurationType, LinearVestingConfig, LinearVestingForm } from './types';
@@ -185,28 +185,14 @@ export const debounce = (func: () => void, wait: number, immediate?: boolean) =>
   };
 };
 
-export async function waitForTransaction(
-  seqno: number,
-  walletContract: OpenedContract<WalletContractV4>,
-) {
-  let currentSeqno = seqno;
-  while (currentSeqno == seqno) {
-    console.log(`waiting for the transaction (seqno: ${seqno}) to confirm...`);
-    await sleep(1500);
-    currentSeqno = await walletContract.getSeqno();
+export async function waitForContractDeploy(address: Address, client: TonClient) {
+  let isDeployed = false;
+  let maxTries = 25;
+  while (!isDeployed && maxTries > 0) {
+    maxTries--;
+    isDeployed = await client.isContractDeployed(address);
+    if (isDeployed) return;
+    await sleep(3000);
   }
-  console.log(`Tx (seqno: ${seqno}) confirmed!`);
-}
-
-export async function waitForSeqno(wallet: OpenedContract<WalletContractV4>) {
-  const seqnoBefore = await wallet.getSeqno();
-
-  return async () => {
-    for (let attempt = 0; attempt < 25; attempt++) {
-      await sleep(3000);
-      const seqnoAfter = await wallet.getSeqno();
-      if (seqnoAfter > seqnoBefore) return;
-    }
-    throw new Error('Timeout');
-  };
+  throw new Error('Timeout');
 }

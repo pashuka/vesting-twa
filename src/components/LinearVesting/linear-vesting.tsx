@@ -1,5 +1,5 @@
 import { CurrencyBitcoin, Paid, Token } from '@mui/icons-material';
-import { ListItemDecorator, Tab, TabList, TabPanel, Tabs, tabClasses } from '@mui/joy';
+import { ListItemDecorator, Tab, TabList, TabPanel, Tabs } from '@mui/joy';
 import { TonConnectButton } from '@tonconnect/ui-react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
@@ -12,31 +12,14 @@ dayjs.locale('ru');
 export const LinearVesting = () => (
   <>
     <TonConnectButton />
-    <Tabs
-      variant="outlined"
-      aria-label="Pricing plan"
-      defaultValue={0}
-      sx={{
-        borderRadius: 'lg',
-        boxShadow: 'sm',
-        overflow: 'auto',
-      }}
-    >
-      <TabList
-        disableUnderline
-        tabFlex={1}
-        sx={{
-          [`& .${tabClasses.root}`]: {
-            [`&[aria-selected="true"]`]: {
-              color: 'primary.500',
-              bgcolor: 'background.surface',
-            },
-            [`&.${tabClasses.focusVisible}`]: {
-              outlineOffset: '-4px',
-            },
-          },
-        }}
-      >
+    <Tabs variant="plain" color="neutral" defaultValue={0}>
+      <TabList disableUnderline tabFlex={1}>
+        <Tab disableIndicator variant="soft" sx={{ flexGrow: 1 }}>
+          <ListItemDecorator>
+            <CurrencyBitcoin />
+          </ListItemDecorator>
+          Вывод жетонов
+        </Tab>
         <Tab disableIndicator variant="soft" sx={{ flexGrow: 1 }}>
           <ListItemDecorator>
             <Token />
@@ -47,23 +30,17 @@ export const LinearVesting = () => (
           <ListItemDecorator>
             <Paid />
           </ListItemDecorator>
-          Пополнить депозит
-        </Tab>
-        <Tab disableIndicator variant="soft" sx={{ flexGrow: 1 }}>
-          <ListItemDecorator>
-            <CurrencyBitcoin />
-          </ListItemDecorator>
-          Вывод жетонов
+          Депозит инвестора
         </Tab>
       </TabList>
       <TabPanel value={0}>
-        <DeployVestingTab />
+        <WithdrawJettonsTab />
       </TabPanel>
       <TabPanel value={1}>
-        <SendJettonsTab />
+        <DeployVestingTab />
       </TabPanel>
       <TabPanel value={2}>
-        <WithdrawJettonsTab />
+        <SendJettonsTab />
       </TabPanel>
     </Tabs>
   </>

@@ -2,7 +2,7 @@ import { ColorPaletteProp } from '@mui/joy';
 import { useQuery } from '@tanstack/react-query';
 import { Address, OpenedContract, StateInit, contractAddress, toNano } from '@ton/core';
 import { CHAIN } from '@tonconnect/ui-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRecoilState } from 'recoil';
 import { DEFAULT_TESTNET_WALLET_2, VESTING_CONTRACT_CODE, WORKCHAIN } from '../constants';
@@ -16,12 +16,15 @@ import {
   sleep,
   today,
   truncateLong,
+  waitForContractDeploy,
 } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
 
 type FormHelperTextMessage = {
+  loading?: boolean;
+  address?: string;
   message: string;
   color: ColorPaletteProp;
 };
@@ -34,6 +37,10 @@ export function useLinearVestingContract() {
   const [deploying, setDeploying] = useState(false);
   const [vestingExistMessage, setVestingExistMessage] = useState<FormHelperTextMessage>();
   const [deployMessages, setDeployMessages] = useState<FormHelperTextMessage[]>([]);
+  const addDeployMessage = useCallback(
+    (msg: FormHelperTextMessage) => setDeployMessages((curr) => [...curr, msg]),
+    [setDeployMessages],
+  );
 
   const {
     register,
@@ -80,6 +87,8 @@ export function useLinearVestingContract() {
   });
 
   const sendDeploy = async (config: LinearVestingConfig) => {
+    if (!client) return;
+
     setDeploying(true);
 
     // check before deploy
@@ -89,63 +98,49 @@ export function useLinearVestingContract() {
       code: VESTING_CONTRACT_CODE,
     };
     const checkAddress = contractAddress(WORKCHAIN, linearVestingStateInit);
+    const vestingAddress = truncateLong(checkAddress.toString());
 
-    setDeployMessages((v) => [
-      ...v,
-      {
-        message: `Проверяем адрес вестинг контракта на основе текущих параметров: ${truncateLong(checkAddress.toString())}`,
-        color: 'neutral',
-      },
-    ]);
+    addDeployMessage({
+      loading: true,
+      message: `Поиск контракта на основе текущих параметров: ${vestingAddress}`,
+      color: 'neutral',
+    });
 
     if (await client?.isContractDeployed(checkAddress)) {
-      setDeployMessages((v) => [
-        ...v,
-        { message: `Вестинг контракт с текущими параметрами уже в сети`, color: 'success' },
-      ]);
+      addDeployMessage({
+        address: checkAddress.toString(),
+        message: `Контракт с текущими параметрами уже в сети:`,
+        color: 'success',
+      });
       setDeployedAdress(checkAddress.toString());
       return;
     }
-
     await sleep(1500);
-    setDeployMessages((v) => [
-      ...v,
-      { message: `Вестинг контракта в сети не обнаружено`, color: 'warning' },
-    ]);
-
+    addDeployMessage({ message: `Вестинг контракта в сети не обнаружено`, color: 'warning' });
     await sleep(1500);
-
-    // const walletContract = WalletContractV4.create({ publicKey: Buffer.from(wallet?.account.publicKey!), workchain: 0 });
-    // const seqno = await walletContract.getSeqno();
-    // const a: WalletContractV4
 
     const linearVesting = client?.open(
       LinearVesting.createFromConfig(config, VESTING_CONTRACT_CODE),
     );
-    setDeployMessages((v) => [
-      ...v,
-      {
-        message: `Деплой ${truncateLong(linearVesting?.address.toString() || '')} в сеть ${(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}`,
-        color: 'success',
-      },
-    ]);
-    if (!linearVesting) {
-      return;
-    }
-    // const deployResult = await linearVesting?.sendDeploy(sender, toNano('0.1'));
+    addDeployMessage({
+      message: `Деплой контракта с адресом ${vestingAddress} в сеть ${(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}`,
+      color: 'neutral',
+    });
     await sender?.send({
       to: linearVesting.address,
       value: toNano('0.1'),
       init: linearVestingStateInit,
     });
-    // if (deployResult) {
-    //   setDeployMessages((v) => [...v, `Транзакция отправлена в сеть`]);
-    // } else {
-    //   setDeployMessages((v) => [...v, `Ошибка отправки транзакции`]);
-    // }
-
-    // setDeploying(false);
+    await waitForContractDeploy(linearVesting.address, client);
+    addDeployMessage({
+      address: checkAddress.toString(),
+      message: `Контракт успешно отправлен в сеть и доступен по адресу:`,
+      color: 'success',
+    });
+    setCheckDeployed(true);
+    setDeploying(false);
   };
+
   const checkDeploymentStatus = async () => {
     setCheckDeployed(true);
     const config = prepareLinearVestingConfig(watch());
@@ -155,16 +150,18 @@ export function useLinearVestingContract() {
       code: VESTING_CONTRACT_CODE,
     };
     const checkAddress = contractAddress(WORKCHAIN, linearVestingStateInit);
-    const vestingAddress = truncateLong(checkAddress.toString());
 
     setVestingExistMessage({
-      message: `Поиск вестинг контракта: ${vestingAddress} в сети...`,
+      loading: true,
+      address: checkAddress.toString(),
+      message: `Поиск вестинг контракта: в сети`,
       color: 'neutral',
     });
     await sleep(1500);
     if (await client?.isContractDeployed(checkAddress)) {
       setVestingExistMessage({
-        message: `Вестинг контракт с текущими параметрами уже в сети: ${vestingAddress}`,
+        address: checkAddress.toString(),
+        message: `Вестинг контракт с текущими параметрами уже в сети:`,
         color: 'success',
       });
       setDeployedAdress(checkAddress.toString());
@@ -172,7 +169,7 @@ export function useLinearVestingContract() {
     }
     await sleep(1500);
     setVestingExistMessage({
-      message: `Вестинг контракта ${vestingAddress} с текущими параметрами в сети не обнаружено, значит будет еще деплой вестинг контракта перед отправкой жетонов`,
+      message: `Вестинг контракта с текущими параметрами в сети не обнаружено, а значит его можно создать`,
       color: 'warning',
     });
     setCheckDeployed(false);

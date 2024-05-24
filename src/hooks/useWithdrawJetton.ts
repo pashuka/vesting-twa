@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Address, OpenedContract, beginCell, toNano } from '@ton/core';
+import { OpenedContract, beginCell, toNano } from '@ton/core';
 import { useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { LinearVesting, Opcodes } from '../contracts/LinearVesting';
 import { withdrawVestingAddressState } from '../state';
+import { getAddress } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
@@ -18,7 +19,9 @@ export function useWithdrawJetton() {
 
   const linearVestingContract = useAsyncInitialize(async () => {
     if (!client || !withdrawVestingAddress) return;
-    const contract = new LinearVesting(Address.parse(withdrawVestingAddress));
+    const wa = getAddress(withdrawVestingAddress);
+    if (!wa) return;
+    const contract = new LinearVesting(wa);
     return client.open(contract) as OpenedContract<LinearVesting>;
   }, [client, withdrawVestingAddress]);
 

@@ -10,7 +10,7 @@ import {
   List,
   ListItem,
 } from '@mui/joy';
-import { fromNano, toNano } from '@ton/core';
+import { fromNano } from '@ton/core';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
@@ -48,7 +48,7 @@ export function SendJettonsTab() {
     <Box sx={{ display: 'grid', gap: 2 }}>
       <Alert color="neutral">
         <List marker="circle" size="sm">
-          <ListItem color="neutral">
+          <ListItem color={'neutral'}>
             Вестинг контракт:{' '}
             {linearVestingAddress ? (
               <>
@@ -133,7 +133,7 @@ export function SendJettonsTab() {
         </List>
       </Alert>
 
-      <FormControl>
+      <FormControl disabled={!connected}>
         <FormLabel>Мастер контракт жетонв (адрес контракта)</FormLabel>
         <Input
           type="text"
@@ -143,31 +143,29 @@ export function SendJettonsTab() {
           onChange={(e) => setJettonMasterAddress(e.target.value)}
         />
       </FormControl>
-      <FormControl>
+      <FormControl disabled>
         <FormLabel>Адрес вашего кошелька</FormLabel>
-        <Input disabled value={jettonWalletAddress?.toString() || ''} />
+        <Input value={jettonWalletAddress?.toString() || ''} />
       </FormControl>
-      <FormControl>
+      <FormControl disabled>
         <FormLabel>Баланс вашего кошелька</FormLabel>
         <Input
-          disabled
           value={queryBalance.data ? `${Number(queryBalance.data).toLocaleString()} JETTONS` : ''}
         />
       </FormControl>
-      <FormControl error={Number(jettonAmount) <= 0}>
+      <FormControl disabled={!connected || !queryBalance.data} error={Number(jettonAmount) <= 0}>
         <FormLabel>Укажите сумму жетонов</FormLabel>
         <Input
-          disabled={!queryBalance.data}
           type="text"
           placeholder="укажите сумму жетонов"
           value={jettonAmount}
           onChange={(e) => setJettonAmount(e.target.value)}
         />
-        {Number(jettonAmount) <= 0 && (
+        {jettonAmount.length > 0 && Number(jettonAmount) <= 0 && (
           <FormHelperText>Сумма должна быть больше нуля</FormHelperText>
         )}
-        <FormHelperText>{fromNano(toNano(jettonAmount)).toString()}</FormHelperText>
       </FormControl>
+      {!connected && <Alert color="danger">Подключите кошелек для отправки жетонов</Alert>}
       <Button
         type="submit"
         disabled={
