@@ -1,4 +1,4 @@
-import { Close } from '@mui/icons-material';
+import { Done } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -9,6 +9,7 @@ import {
   Input,
   List,
   ListItem,
+  Typography,
 } from '@mui/joy';
 import { fromNano } from '@ton/core';
 import dayjs from 'dayjs';
@@ -35,6 +36,7 @@ export function SendJettonsTab() {
     queryBalance,
     queryJettonMetaData,
     queryVesting,
+    isVestingFinished,
     jettonAmount,
     sending,
     jettonVestingBalance,
@@ -42,12 +44,13 @@ export function SendJettonsTab() {
     sendJettons,
     deployedVestingAddress,
     setDeployedVestingAddress,
+    terminateContract,
   } = useJettonContract();
 
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
       <Alert color="neutral">
-        <List marker="circle" size="sm">
+        <List size="sm">
           <ListItem color={'neutral'}>
             Вестинг контракт:{' '}
             {linearVestingAddress ? (
@@ -76,7 +79,7 @@ export function SendJettonsTab() {
                     sx={{ px: 0.75 }}
                     onClick={() => setPickBySelfVestingAddress(false)}
                   >
-                    <Close />
+                    <Done />
                   </Button>
                 }
                 value={deployedVestingAddress?.toString() || ''}
@@ -134,10 +137,34 @@ export function SendJettonsTab() {
               ? ` [ ${queryJettonMetaData.data?.content?.name} ]`
               : ''}
           </ListItem>
+          <ListItem
+            color="neutral"
+            endAction={
+              !isVestingFinished && (
+                <Button
+                  disabled={!connected || !linearVestingAddress || sending}
+                  variant="solid"
+                  color="danger"
+                  sx={{ px: 0.75 }}
+                  onClick={() =>
+                    window.confirm('Вы уверены?') &&
+                    window.confirm(
+                      'Весь оставшийся баланс жетонов будет отправлен на кошелек администратора. Продолжаем?',
+                    ) &&
+                    terminateContract()
+                  }
+                >
+                  Отменв вестинга
+                </Button>
+              )
+            }
+          >
+            Статус: {isVestingFinished && <Typography color="danger">вестинг закрыт</Typography>}
+          </ListItem>
         </List>
       </Alert>
 
-      <FormControl disabled={!connected}>
+      <FormControl disabled={!connected || isVestingFinished}>
         <FormLabel>Мастер контракт жетонв (адрес контракта)</FormLabel>
         <Input
           type="text"
@@ -167,7 +194,10 @@ export function SendJettonsTab() {
           </FormHelperText>
         )}
       </FormControl>
-      <FormControl disabled={!connected || !queryBalance.data} error={Number(jettonAmount) <= 0}>
+      <FormControl
+        disabled={!connected || !queryBalance.data || isVestingFinished}
+        error={Number(jettonAmount) <= 0}
+      >
         <FormLabel>Укажите сумму жетонов</FormLabel>
         <Input
           type="text"
@@ -189,7 +219,8 @@ export function SendJettonsTab() {
           Number.isNaN(jettonAmount) ||
           Number(jettonAmount) === 0 ||
           !linearVestingAddress ||
-          sending
+          sending ||
+          isVestingFinished
         }
         onClick={sendJettons}
       >

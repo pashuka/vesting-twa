@@ -6,9 +6,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRecoilState } from 'recoil';
 import { DEFAULT_TESTNET_WALLET_2, VESTING_CONTRACT_CODE, WORKCHAIN } from '../constants';
-import { LinearVesting, linearVestingConfigToCell } from '../contracts/LinearVesting';
+import {
+  LinearVesting,
+  LinearVestingConfig,
+  linearVestingConfigToCell,
+} from '../contracts/LinearVesting';
 import { deployedVestingAddressState } from '../state';
-import { LinearVestingConfig, LinearVestingForm, durationTypes } from '../types';
+import { LinearVestingForm, durationTypes } from '../types';
 import {
   debounce,
   getInputDateFormat,
@@ -31,7 +35,7 @@ type FormHelperTextMessage = {
 
 export function useLinearVestingContract() {
   const { client } = useTonClient();
-  const { sender, network } = useTonConnect();
+  const { sender, network, wallet } = useTonConnect();
   const [deployedAdress, setDeployedAdress] = useRecoilState(deployedVestingAddressState);
   const [checkDeployed, setCheckDeployed] = useState(true);
   const [deploying, setDeploying] = useState(false);
@@ -51,9 +55,10 @@ export function useLinearVestingContract() {
   } = useForm<LinearVestingForm>({
     mode: 'all',
     defaultValues: {
+      adminAddress: wallet ? Address.parse(wallet).toString() : undefined,
+      ownerAddress: DEFAULT_TESTNET_WALLET_2,
       cliffDuration: 0,
       cliffDurationType: durationTypes[0],
-      ownerAddress: DEFAULT_TESTNET_WALLET_2,
       startTime: getInputDateFormat(today()),
       totalDuration: 1,
       totalDurationType: durationTypes[1],

@@ -64,6 +64,14 @@ export function DeployVestingTab() {
     <form onSubmit={handleSubmit(onSubmit)}>
       <Box sx={{ display: 'grid', gap: 2 }}>
         {/*  */}
+        <FormControl disabled>
+          <FormLabel>
+            Кошелек администратора
+            <FormLabelTooltip title="Адрес кошелька администратора" />
+          </FormLabel>
+          <Input placeholder="..." type="text" {...register('adminAddress', { required: true })} />
+          {errors.ownerAddress && <FormHelperText>{errors.ownerAddress.message}</FormHelperText>}
+        </FormControl>
         <FormControl disabled={!connected || deploying} error={!!errors.ownerAddress}>
           <FormLabel>
             Адрес кошелька инвестора

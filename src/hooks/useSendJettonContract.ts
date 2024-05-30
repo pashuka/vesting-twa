@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Address, OpenedContract, fromNano, toNano } from '@ton/core';
+import { Address, OpenedContract, beginCell, fromNano, toNano } from '@ton/core';
 import { useState } from 'react';
 import { useRecoilState } from 'recoil';
 import Jetton from '../contracts/Jetton';
 import JettonWallet from '../contracts/JettonWallet';
-import { LinearVesting } from '../contracts/LinearVesting';
+import { LinearVesting, Opcodes } from '../contracts/LinearVesting';
 import { getJettonMetadata } from '../metadata';
 import { deployedVestingAddressState, jettonMasterAddressState } from '../state';
 import { getAddress, waitForSeqno } from '../utils';
@@ -102,6 +102,9 @@ export function useJettonContract() {
 
   return {
     queryVesting,
+    isVestingFinished: !!(
+      queryVesting.data && queryVesting.data.totalDeposited === queryVesting.data.totalWithdrawals
+    ),
     queryBalance,
     queryJettonMetaData,
     jettonVestingBalance: jettonVesingIsFetching ? null : jettonVestingData,
@@ -141,6 +144,26 @@ export function useJettonContract() {
 
       setUpdateBalance(true);
       setUpdateVestingData(true);
+      setSending(false);
+    },
+    terminateContract: async () => {
+      if (!client || !wallet || !linearVestingContract) {
+        return;
+      }
+
+      setSending(true);
+      const waiter = await waitForSeqno(client, Address.parse(wallet));
+
+      await sender?.send({
+        to: linearVestingContract.address,
+        value: toNano('0.1'),
+        body: beginCell().storeUint(Opcodes.terminate, 32).storeUint(0, 64).endCell(),
+      });
+
+      try {
+        await waiter();
+      } catch (error) {}
+
       setSending(false);
     },
   };

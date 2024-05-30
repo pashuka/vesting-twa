@@ -10,28 +10,37 @@ import {
 } from '@ton/core';
 
 export type LinearVestingConfig = {
+  admin_address: Address;
+  owner_address: Address;
   start_time: number;
   total_duration: number;
   unlock_period: number;
   cliff_duration: number;
-  owner_address: Address;
 };
 
 export function linearVestingConfigToCell(config: LinearVestingConfig): Cell {
-  return beginCell()
+  const vestingParams = beginCell()
     .storeUint(config.start_time, 64)
     .storeUint(config.total_duration, 32)
     .storeUint(config.unlock_period, 32)
     .storeUint(config.cliff_duration, 32)
     .storeCoins(0) // total_deposited
     .storeCoins(0) // total_withdrawals
+    .endCell();
+
+  return beginCell()
+    .storeAddress(config.admin_address)
     .storeAddress(config.owner_address)
     .storeAddress(null) // jetton_wallet
+    .storeRef(vestingParams)
     .endCell();
 }
 
 export const Opcodes = {
   withdraw: 0xb5de5f9e,
+  upgrade: 0xb766741a,
+  terminate: 0x6c95e810,
+  excesses: 0x3a70c2c,
 };
 
 export class LinearVesting implements Contract {

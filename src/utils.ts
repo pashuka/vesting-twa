@@ -2,7 +2,8 @@ import { Address } from '@ton/core';
 import { TonClient } from '@ton/ton';
 import { CHAIN } from '@tonconnect/ui-react';
 import { START_TIME_OVERHEAD } from './constants';
-import { DurationType, LinearVestingConfig, LinearVestingForm } from './types';
+import { LinearVestingConfig } from './contracts/LinearVesting';
+import { DurationType, LinearVestingForm } from './types';
 
 export const truncateLong = (s: string, l = 20, separator = '...') => {
   if (s.length <= l) return s;
@@ -74,11 +75,12 @@ export const addDays = (d: Date, days: number) => {
 export const getInputDateFormat = (d: Date) => d.toISOString().split('T')[0];
 
 export const prepareLinearVestingConfig = (f: LinearVestingForm): LinearVestingConfig => ({
+  owner_address: Address.parse(f.ownerAddress),
+  admin_address: Address.parse(f.adminAddress),
   start_time: Math.round(new Date(f.startTime).getTime() / 1000),
   total_duration: durationSeconds(f.totalDurationType) * f.totalDuration,
   unlock_period: durationSeconds(f.unlockPeriodType) * f.unlockPeriod,
   cliff_duration: durationSeconds(f.cliffDurationType) * f.cliffDuration,
-  owner_address: Address.parse(f.ownerAddress),
 });
 
 // totalDuration > 0
