@@ -1,3 +1,4 @@
+import { useMaskito } from '@maskito/react';
 import { Done } from '@mui/icons-material';
 import {
   Alert,
@@ -17,6 +18,7 @@ import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useState } from 'react';
+import { amountMask } from '../../constants';
 import { useJettonContract } from '../../hooks/useSendJettonContract';
 import { useTonConnect } from '../../hooks/useTonConnect';
 import { TonviewerLink } from './tonviewer-link';
@@ -26,6 +28,7 @@ dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
 export function SendJettonsTab() {
+  const amountInputRef = useMaskito({ options: amountMask });
   const [pickBySelfVestingAddress, setPickBySelfVestingAddress] = useState(false);
   const { connected, network } = useTonConnect();
   const {
@@ -38,6 +41,7 @@ export function SendJettonsTab() {
     queryVesting,
     isVestingFinished,
     jettonAmount,
+    jettonAmountNumber,
     sending,
     jettonVestingBalance,
     setJettonAmount,
@@ -196,16 +200,24 @@ export function SendJettonsTab() {
       </FormControl>
       <FormControl
         disabled={!connected || !queryBalance.data || isVestingFinished}
-        error={Number(jettonAmount) <= 0}
+        error={Number(jettonAmountNumber) <= 0}
       >
-        <FormLabel>Укажите сумму жетонов</FormLabel>
+        <FormLabel>Укажите сумму</FormLabel>
         <Input
+          size="lg"
           type="text"
-          placeholder="укажите сумму жетонов"
+          placeholder="0"
           value={jettonAmount}
-          onChange={(e) => setJettonAmount(e.target.value)}
+          // onChange={(e) => setJettonAmount(e.target.value)}
+          startDecorator={queryJettonMetaData.data?.content?.symbol}
+          slotProps={{
+            input: {
+              ref: amountInputRef,
+              onInput: (e) => setJettonAmount(e.currentTarget.value),
+            },
+          }}
         />
-        {jettonAmount.length > 0 && Number(jettonAmount) <= 0 && (
+        {jettonAmount.length > 0 && jettonAmountNumber <= 0 && (
           <FormHelperText>Сумма должна быть больше нуля</FormHelperText>
         )}
       </FormControl>
@@ -216,8 +228,7 @@ export function SendJettonsTab() {
         disabled={
           !connected ||
           !queryBalance.data ||
-          Number.isNaN(jettonAmount) ||
-          Number(jettonAmount) === 0 ||
+          jettonAmountNumber === 0 ||
           !linearVestingAddress ||
           sending ||
           isVestingFinished

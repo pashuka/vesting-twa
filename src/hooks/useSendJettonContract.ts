@@ -103,7 +103,9 @@ export function useJettonContract() {
   return {
     queryVesting,
     isVestingFinished: !!(
-      queryVesting.data && queryVesting.data.totalDeposited === queryVesting.data.totalWithdrawals
+      queryVesting.data &&
+      queryVesting.data.totalDeposited !== 0n &&
+      queryVesting.data.totalDeposited === queryVesting.data.totalWithdrawals
     ),
     queryBalance,
     queryJettonMetaData,
@@ -113,6 +115,7 @@ export function useJettonContract() {
     setJettonMasterAddress,
     jettonWalletAddress: jettonWalletContract?.address,
     jettonAmount,
+    jettonAmountNumber: Number((jettonAmount || '0').split(' ').join('')),
     setJettonAmount,
     deployedVestingAddress,
     setDeployedVestingAddress,
@@ -125,11 +128,13 @@ export function useJettonContract() {
 
       const waiter = await waitForSeqno(client, Address.parse(wallet));
 
+      const jettonAmountNumber = Number((jettonAmount || '0').split(' ').join(''));
+
       await sender?.send({
         to: jettonWalletContract.address,
         value: toNano('0.1'),
         body: JettonWallet.transferMessage(
-          toNano(jettonAmount),
+          toNano(jettonAmountNumber),
           linearVestingContract.address,
           jettonWalletContract.address,
           null,

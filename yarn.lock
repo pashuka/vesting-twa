@@ -399,6 +399,21 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@maskito/core@^2.3.2":
+  version "2.3.2"
+  resolved "https://registry.npmjs.org/@maskito/core/-/core-2.3.2.tgz"
+  integrity sha512-Epz1bWlUC71CulXzaF2c+6Iq9ffYPPtSEgwYvfQT21IdwjV6SVMvPL+RZ4Mkd4bzXFrdrmm4BEFjPCWraCC9lA==
+
+"@maskito/kit@^2.3.2":
+  version "2.3.2"
+  resolved "https://registry.npmjs.org/@maskito/kit/-/kit-2.3.2.tgz"
+  integrity sha512-wnS5J0fCe9rS/n3316+0AyC+sk/MAKtfio5Vev2Rhhtref500F8esDMqmFMFF8JRVQdqrkDDU/CaOh/NejOkww==
+
+"@maskito/react@^2.3.2":
+  version "2.3.2"
+  resolved "https://registry.npmjs.org/@maskito/react/-/react-2.3.2.tgz"
+  integrity sha512-1N6wenfeV27dw07Zjw5ssupjwfLaubRXneg4DkjWelDrDB7FqXMGs0mt4MoY6X5bUhaajzO/JOgJvFuCR9ipZw==
+
 "@mui/base@5.0.0-beta.40":
   version "5.0.0-beta.40"
   resolved "https://registry.npmjs.org/@mui/base/-/base-5.0.0-beta.40.tgz"
@@ -2220,7 +2235,7 @@ randomfill@^1.0.3:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
 
-"react-dom@^17.0.0 || ^18.0.0", react-dom@^18.3.1, "react-dom@>= 16.8.0", react-dom@>=16.6.0, react-dom@>=16.8.0, react-dom@>=17.0.0:
+"react-dom@^17.0.0 || ^18.0.0", react-dom@^18.3.1, "react-dom@>= 16.8.0", react-dom@>=16.6.0, react-dom@>=16.8, react-dom@>=16.8.0, react-dom@>=17.0.0:
   version "18.3.1"
   resolved "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz"
   integrity sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==
@@ -2258,7 +2273,7 @@ react-transition-group@^4.4.5:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
-"react@^16.8.0 || ^17 || ^18", "react@^17.0.0 || ^18.0.0", react@^18.0.0, react@^18.3.1, "react@>= 16.8.0", react@>=16.0.0, react@>=16.13.1, react@>=16.6.0, react@>=16.8.0, react@>=16.8.1, react@>=17.0.0:
+"react@^16.8.0 || ^17 || ^18", "react@^17.0.0 || ^18.0.0", react@^18.0.0, react@^18.3.1, "react@>= 16.8.0", react@>=16.0.0, react@>=16.13.1, react@>=16.6.0, react@>=16.8, react@>=16.8.0, react@>=16.8.1, react@>=17.0.0:
   version "18.3.1"
   resolved "https://registry.npmjs.org/react/-/react-18.3.1.tgz"
   integrity sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==
