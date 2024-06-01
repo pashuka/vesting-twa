@@ -2,7 +2,7 @@ import { Address } from '@ton/core';
 import { TonClient } from '@ton/ton';
 import { CHAIN } from '@tonconnect/ui-react';
 import { DEFAULT_DECIMAL_PLACES, START_TIME_OVERHEAD } from './constants';
-import { LinearVestingConfig } from './contracts/LinearVesting';
+import { LinearVestingConfig, LinearVestingConfigTiny } from './contracts/LinearVesting';
 import Big from './lib/big.js';
 import { DurationType, LinearVestingForm } from './types';
 
@@ -230,3 +230,30 @@ export function toBig(value: bigint | number, decimals = DEFAULT_DECIMAL_PLACES,
 export function toDecimal(value: bigint | number, decimals?: number, noFloor = false) {
   return toBig(value, decimals ?? DEFAULT_DECIMAL_PLACES, noFloor).toString();
 }
+
+export function instanceOfLinearVestingConfig(o: unknown): o is LinearVestingConfig {
+  return o != null && typeof o === 'object' && 'admin_address' in o && 'owner_address' in o;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function instanceOfLinearVestingConfigArray(o: any): o is LinearVestingConfig[] {
+  return o && Array.isArray(o) && o.every(instanceOfLinearVestingConfig);
+}
+
+export function instanceOfLVCTiny(o: unknown): o is LinearVestingConfigTiny {
+  return o != null && typeof o === 'object' && 'a' in o && 'o' in o;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function instanceOfLVCTinyArray(o: any): o is LinearVestingConfigTiny[] {
+  return o && Array.isArray(o) && o.every(instanceOfLVCTiny);
+}
+
+export const tinyLinearVestingConfig = (value: LinearVestingConfig): LinearVestingConfigTiny => ({
+  a: value.admin_address.toString(),
+  o: value.owner_address.toString(),
+  s: value.start_time,
+  t: value.total_duration,
+  u: value.unlock_period,
+  c: value.cliff_duration,
+});

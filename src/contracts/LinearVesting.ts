@@ -18,6 +18,15 @@ export type LinearVestingConfig = {
   cliff_duration: number;
 };
 
+export type LinearVestingConfigTiny = {
+  a: string;
+  o: string;
+  s: number;
+  t: number;
+  u: number;
+  c: number;
+};
+
 export function linearVestingConfigToCell(config: LinearVestingConfig): Cell {
   const vestingParams = beginCell()
     .storeUint(config.start_time, 64)

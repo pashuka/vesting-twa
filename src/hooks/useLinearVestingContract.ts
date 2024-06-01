@@ -18,11 +18,13 @@ import {
   getInputDateFormat,
   prepareLinearVestingConfig,
   sleep,
+  tinyLinearVestingConfig,
   today,
   truncateLong,
   waitForContractDeploy,
 } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
+import { useListDeployedContracts } from './useListDeployedContracts';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
 
@@ -34,6 +36,7 @@ type FormHelperTextMessage = {
 };
 
 export function useLinearVestingContract() {
+  const { listDeployedContracts, addDeployedContract } = useListDeployedContracts();
   const { client } = useTonClient();
   const { sender, network, wallet } = useTonConnect();
   const [deployedAdress, setDeployedAdress] = useRecoilState(deployedVestingAddressState);
@@ -126,9 +129,9 @@ export function useLinearVestingContract() {
       setDeployedAdress(checkAddress.toString());
       return;
     }
-    await sleep(1500);
+    await sleep(500);
     addDeployMessage({ message: `Вестинг контракта в сети не обнаружено`, color: 'warning' });
-    await sleep(1500);
+    await sleep(500);
 
     const linearVesting = client?.open(
       LinearVesting.createFromConfig(config, VESTING_CONTRACT_CODE),
@@ -143,6 +146,9 @@ export function useLinearVestingContract() {
       init: linearVestingStateInit,
     });
     await waitForContractDeploy(linearVesting.address, client);
+
+    await sleep(15 * 1000);
+
     addDeployMessage({
       address: checkAddress.toString(),
       message: `Контракт успешно отправлен в сеть и доступен по адресу:`,
@@ -177,7 +183,7 @@ export function useLinearVestingContract() {
       message: `Поиск вестинг контракта: в сети`,
       color: 'neutral',
     });
-    await sleep(1500);
+    await sleep(500);
     if (await client?.isContractDeployed(checkAddress)) {
       setVestingExistMessage({
         address: checkAddress.toString(),
@@ -187,7 +193,7 @@ export function useLinearVestingContract() {
       setDeployedAdress(checkAddress.toString());
       return;
     }
-    await sleep(1500);
+    await sleep(500);
     setVestingExistMessage({
       message: `Вестинг контракта с текущими параметрами в сети не обнаружено, а значит его можно создать`,
       color: 'warning',
@@ -199,6 +205,20 @@ export function useLinearVestingContract() {
     () => debounce(checkDeploymentStatus, 2500, true),
     [checkDeploymentStatus],
   );
+
+  useEffect(() => {
+    if (deployedAdress && isValidForm) {
+      const formData = watch();
+      const config = prepareLinearVestingConfig(formData);
+      const tinyConfig = tinyLinearVestingConfig(config);
+      const exist = listDeployedContracts.findIndex(
+        (f) => JSON.stringify(f) === JSON.stringify(tinyConfig),
+      );
+      if (exist === -1) {
+        addDeployedContract(config);
+      }
+    }
+  }, [deployedAdress]);
 
   useEffect(() => {
     if (!client) return;
