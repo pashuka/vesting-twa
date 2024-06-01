@@ -106,7 +106,7 @@ export function DeployVestingTab() {
           <Input
             type="date"
             {...register('startTime', { required: true })}
-            slotProps={{ input: { min: getInputDateFormat(addDays(today(), -2)) } }}
+            slotProps={{ input: { min: getInputDateFormat(addDays(today(), -30)) } }}
           />
           {errors.startTime && <FormHelperText>{errors.startTime.message}</FormHelperText>}
         </FormControl>
