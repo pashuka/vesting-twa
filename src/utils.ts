@@ -124,7 +124,7 @@ export const validateCliffDuration = (_: number, form: LinearVestingForm) => {
 export const unlockPeriodHelperText = (form: LinearVestingForm) => {
   const totalDurationValue = durationSeconds(form.totalDurationType) * form.totalDuration;
   const unlockPeriodValue = durationSeconds(form.unlockPeriodType) * form.unlockPeriod;
-  return `Депозит будет разбит на ${totalDurationValue / unlockPeriodValue} части/ей, где одна часть выплат составит ~ ${(100 / (totalDurationValue / unlockPeriodValue)).toPrecision(4)} % от общего депозита`;
+  return `Депозит будет разбит на ${totalDurationValue / unlockPeriodValue} части/ей, где одна часть выплат составит ~ ${Number((100 / (totalDurationValue / unlockPeriodValue)).toPrecision(2))} % от общего депозита`;
 };
 
 export const cliffPeriodHelperText = (form: LinearVestingForm) => {
@@ -148,6 +148,7 @@ export const validateOwnerAddress =
     if (!ownerAddress) {
       return 'Адрес получателя указан с ошибкой';
     }
+    // console.log(network, CHAIN.MAINNET, ownerAddress.workChain);
     if (network === CHAIN.MAINNET && ownerAddress.workChain.toString() !== network) {
       return 'Адрес получателя указывает на testnet, а вы подключили кошелек основной сети';
     }

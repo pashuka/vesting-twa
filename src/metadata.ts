@@ -49,13 +49,13 @@ export async function getJettonMetadata(content: Cell) {
   if (prefix === OFFCHAIN_CONTENT_PREFIX) {
     const bytes = readSnakeBytes(slice);
     const contentUri = bytes.toString('utf-8');
-    console.log('fetchJettonOffchainMetadata');
+    // console.log('fetchJettonOffchainMetadata');
     // metadata = await fetchJettonOffchainMetadata(contentUri);
   } else {
     // On-chain content
     metadata = await parseJettonOnchainMetadata(slice);
     if (metadata.uri) {
-      console.log('fetchJettonOffchainMetadata');
+      // console.log('fetchJettonOffchainMetadata');
       // Semi-chain content
       // const offchainMetadata = await fetchJettonOffchainMetadata(metadata.uri);
       // metadata = { ...offchainMetadata, ...metadata };

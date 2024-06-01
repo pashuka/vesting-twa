@@ -12,6 +12,8 @@ import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
 
+export const SPINTRIA_MASTER_ADDRESS = 'EQACLXDwit01stiqK9FvYiJo15luVzfD5zU8uwDSq6JXxbP8';
+
 export function useJettonContract() {
   const { client } = useTonClient();
   const { sender, wallet } = useTonConnect();
@@ -69,7 +71,10 @@ export function useJettonContract() {
     queryFn: async () => {
       if (!jettonWalletContract) return null;
       setUpdateBalance(false);
-      return (await jettonWalletContract.getBalance()).toString();
+      const balance = await jettonWalletContract.getBalance();
+      // console.log({ balance });
+
+      return balance;
     },
   });
 

@@ -55,15 +55,15 @@ export function useLinearVestingContract() {
   } = useForm<LinearVestingForm>({
     mode: 'all',
     defaultValues: {
-      adminAddress: wallet ? Address.parse(wallet).toString() : undefined,
-      ownerAddress: DEFAULT_TESTNET_WALLET_2,
+      // adminAddress: wallet ? Address.parse(wallet).toString() : undefined,
+      ownerAddress: network === CHAIN.TESTNET ? DEFAULT_TESTNET_WALLET_2 : '',
       cliffDuration: 0,
       cliffDurationType: durationTypes[0],
       startTime: getInputDateFormat(today()),
-      totalDuration: 1,
-      totalDurationType: durationTypes[1],
+      totalDuration: 100,
+      totalDurationType: durationTypes[2],
       unlockPeriod: 1,
-      unlockPeriodType: durationTypes[0],
+      unlockPeriodType: durationTypes[2],
     },
   });
   const {
@@ -76,6 +76,12 @@ export function useLinearVestingContract() {
     cliffDurationType,
     ownerAddress,
   } = watch();
+
+  useEffect(() => {
+    if (wallet) {
+      setValue('adminAddress', Address.parse(wallet).toString());
+    }
+  }, [wallet]);
 
   const linearVestingContract = useAsyncInitialize(async () => {
     if (!client || !deployedAdress) return;
@@ -148,7 +154,16 @@ export function useLinearVestingContract() {
 
   const checkDeploymentStatus = async () => {
     setCheckDeployed(true);
-    const config = prepareLinearVestingConfig(watch());
+    const params = watch();
+    if (
+      !params.adminAddress ||
+      params.adminAddress.length === 0 ||
+      !params.ownerAddress ||
+      params.ownerAddress.length === 0
+    )
+      return;
+    const config = prepareLinearVestingConfig(params);
+    if (!config.owner_address) return;
     const initialData = linearVestingConfigToCell(config);
     const linearVestingStateInit: StateInit = {
       data: initialData,

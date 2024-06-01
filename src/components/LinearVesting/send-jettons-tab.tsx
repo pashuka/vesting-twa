@@ -30,7 +30,7 @@ dayjs.extend(duration);
 export function SendJettonsTab() {
   const amountInputRef = useMaskito({ options: amountMask });
   const [pickBySelfVestingAddress, setPickBySelfVestingAddress] = useState(false);
-  const { connected, network } = useTonConnect();
+  const { connected, isMainnet } = useTonConnect();
   const {
     linearVestingAddress,
     jettonWalletAddress,
@@ -59,7 +59,7 @@ export function SendJettonsTab() {
             Вестинг контракт:{' '}
             {linearVestingAddress ? (
               <>
-                <TonviewerLink address={linearVestingAddress} />
+                <TonviewerLink address={linearVestingAddress} testnet={!isMainnet} />
                 {!pickBySelfVestingAddress && (
                   <Button
                     sx={{ mx: 1 }}
@@ -94,7 +94,10 @@ export function SendJettonsTab() {
           <ListItem color="neutral">
             Инвестор:{' '}
             {queryVesting.data && (
-              <TonviewerLink address={queryVesting.data?.ownerAddress.toString()} />
+              <TonviewerLink
+                address={queryVesting.data?.ownerAddress.toString()}
+                testnet={!isMainnet}
+              />
             )}
           </ListItem>
           <ListItem color="neutral">
@@ -172,10 +175,10 @@ export function SendJettonsTab() {
         <FormLabel>Мастер контракт жетонв (адрес контракта)</FormLabel>
         <Input
           type="text"
-          placeholder="укажите адрес кошелька жетонов откуда будут отправлены монеты на вестинг контракт"
-          // EQCPibTvi3oGBXRjXh86SSrYicPXgf-3_9BzOCh-iFssVTuF
+          placeholder="Адрес кошелька жетонов откуда будут отправлены монеты на вестинг контракт"
           value={jettonMasterAddress?.toString() || ''}
-          onChange={(e) => setJettonMasterAddress(e.target.value)}
+          // onChange={(e) => setJettonMasterAddress(e.target.value)}
+          disabled
         />
       </FormControl>
       <FormControl disabled>
@@ -187,7 +190,7 @@ export function SendJettonsTab() {
         <Input
           value={
             queryBalance.data
-              ? `${Number(queryBalance.data).toLocaleString()} ${queryJettonMetaData.data?.content?.symbol}`
+              ? `${queryBalance.data.toLocaleString()} ${queryJettonMetaData.data?.content?.symbol}`
               : ''
           }
         />

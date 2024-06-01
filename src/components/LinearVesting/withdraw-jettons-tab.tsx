@@ -13,7 +13,7 @@ dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
 export function WithdrawJettonsTab() {
-  const { connected, wallet } = useTonConnect();
+  const { connected, wallet, isMainnet } = useTonConnect();
   const walletAddress = wallet ? Address.parse(wallet).toString() : undefined;
   const {
     linearVestingAddress,
@@ -38,7 +38,7 @@ export function WithdrawJettonsTab() {
         <ListItem color="neutral">
           Вестинг контракт:{' '}
           {linearVestingAddress ? (
-            <TonviewerLink address={linearVestingAddress} />
+            <TonviewerLink address={linearVestingAddress} testnet={!isMainnet} />
           ) : (
             'Будет указан после деплоя вестинг-контракта из предыдущей вкладки'
           )}
@@ -46,7 +46,10 @@ export function WithdrawJettonsTab() {
         <ListItem color="neutral">
           Правообладатель (инвестор):{' '}
           {queryVesting.data && (
-            <TonviewerLink address={queryVesting.data?.ownerAddress.toString()} />
+            <TonviewerLink
+              address={queryVesting.data?.ownerAddress.toString()}
+              testnet={!isMainnet}
+            />
           )}
         </ListItem>
         <ListItem color="neutral">

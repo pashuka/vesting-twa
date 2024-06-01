@@ -15,6 +15,8 @@ import {
 import { CHAIN } from '@tonconnect/ui-react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
+import duration from 'dayjs/plugin/duration';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { SubmitHandler } from 'react-hook-form';
 import { useLinearVestingContract } from '../../hooks/useLinearVestingContract';
 import { useTonConnect } from '../../hooks/useTonConnect';
@@ -23,12 +25,12 @@ import {
   addDays,
   cliffPeriodHelperText,
   durationLocale,
+  durationSeconds,
   getInputDateFormat,
   prepareLinearVestingConfig,
   today,
   unlockPeriodHelperText,
   validateCliffDuration,
-  validateOwnerAddress,
   validateTotalDuration,
   validateUnlockPeriod,
 } from '../../utils';
@@ -37,9 +39,11 @@ import { CircularProgress } from '../circular-progress';
 import { TonviewerLink } from './tonviewer-link';
 
 dayjs.locale('ru');
+dayjs.extend(relativeTime);
+dayjs.extend(duration);
 
 export function DeployVestingTab() {
-  const { connected, network } = useTonConnect();
+  const { connected, network, isMainnet } = useTonConnect();
   const {
     value,
     address,
@@ -59,6 +63,8 @@ export function DeployVestingTab() {
   const onSubmit: SubmitHandler<LinearVestingForm> = (data) => {
     sendDeploy(prepareLinearVestingConfig(data));
   };
+
+  const totalDurationValue = watch('totalDuration') * durationSeconds(watch('totalDurationType'));
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -82,7 +88,7 @@ export function DeployVestingTab() {
             type="text"
             {...register('ownerAddress', {
               required: true,
-              validate: validateOwnerAddress(network),
+              // validate: validateOwnerAddress(network),
             })}
           />
           {errors.ownerAddress && <FormHelperText>{errors.ownerAddress.message}</FormHelperText>}
@@ -143,6 +149,11 @@ export function DeployVestingTab() {
             })}
           />
           {errors.totalDuration && <FormHelperText>{errors.totalDuration.message}</FormHelperText>}
+          {totalDurationValue && (
+            <FormHelperText>
+              &nbsp;~&nbsp;{dayjs.duration(totalDurationValue, 'second').format('Y[г] M[м] D[д]')}
+            </FormHelperText>
+          )}
         </FormControl>
         {/*  */}
         <FormControl disabled={!connected || deploying} error={!!errors.unlockPeriod}>
@@ -236,7 +247,8 @@ export function DeployVestingTab() {
             <List marker="circle" size="sm">
               {deployMessages.map((m, i) => (
                 <ListItem key={`deploy-message-${i}`} color={m.color}>
-                  {m.message} {m.address && <TonviewerLink address={m.address} />}
+                  {m.message}{' '}
+                  {m.address && <TonviewerLink address={m.address} testnet={!isMainnet} />}
                 </ListItem>
               ))}
             </List>
@@ -259,7 +271,7 @@ export function DeployVestingTab() {
               )}
               {vestingExistMessage.message}{' '}
               {vestingExistMessage.address && (
-                <TonviewerLink address={vestingExistMessage.address} />
+                <TonviewerLink address={vestingExistMessage.address} testnet={!isMainnet} />
               )}
             </FormHelperText>
           )}
