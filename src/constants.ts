@@ -14,3 +14,5 @@ export const amountMask = maskitoNumberOptionsGenerator({
   min: 0,
   // postfix: '',
 });
+export const FRACTION_DIGITS = 2;
+export const DEFAULT_DECIMAL_PLACES = 9;

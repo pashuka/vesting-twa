@@ -2,12 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Address, OpenedContract, beginCell, fromNano, toNano } from '@ton/core';
 import { useState } from 'react';
 import { useRecoilState } from 'recoil';
+import { DEFAULT_DECIMAL_PLACES } from '../constants';
 import Jetton from '../contracts/Jetton';
 import JettonWallet from '../contracts/JettonWallet';
 import { LinearVesting, Opcodes } from '../contracts/LinearVesting';
 import { getJettonMetadata } from '../metadata';
 import { deployedVestingAddressState, jettonMasterAddressState } from '../state';
-import { getAddress, waitForSeqno } from '../utils';
+import { getAddress, toDecimal, waitForSeqno } from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
@@ -65,19 +66,6 @@ export function useJettonContract() {
     },
   });
 
-  const queryBalance = useQuery({
-    queryKey: ['jetton-wallet-balance', jettonWalletContract, updateBalance],
-    // refetchInterval: 5 * 1000,
-    queryFn: async () => {
-      if (!jettonWalletContract) return null;
-      setUpdateBalance(false);
-      const balance = await jettonWalletContract.getBalance();
-      // console.log({ balance });
-
-      return balance;
-    },
-  });
-
   const queryJettonMetaData = useQuery({
     queryKey: ['jetton-master-data', jettonMasterContract],
     // refetchInterval: 5 * 1000,
@@ -94,6 +82,20 @@ export function useJettonContract() {
     },
   });
 
+  const queryBalance = useQuery({
+    queryKey: ['jetton-wallet-balance', jettonWalletContract, updateBalance, queryJettonMetaData],
+    // refetchInterval: 5 * 1000,
+    queryFn: async () => {
+      if (!jettonWalletContract || !queryJettonMetaData.data) return null;
+      setUpdateBalance(false);
+      const { content } = queryJettonMetaData.data;
+      const decimals = content?.decimals ? Number(content.decimals) : DEFAULT_DECIMAL_PLACES;
+      const balance = await jettonWalletContract.getBalance();
+      return toDecimal(balance, decimals);
+      // return fromNano(balance);
+    },
+  });
+
   const { data: jettonVestingData, isFetching: jettonVesingIsFetching } = useQuery({
     queryKey: ['jetton-vesting-balance', jettonVestingContract, updateVestingData],
     // refetchInterval: 5 * 1000,
@@ -101,7 +103,8 @@ export function useJettonContract() {
       if (!jettonVestingContract) return null;
       if (!jettonVestingContract) return null;
       setUpdateVestingData(false);
-      return (await jettonVestingContract.getBalance()).toString();
+      const balance = await jettonVestingContract.getBalance();
+      return fromNano(balance);
     },
   });
 

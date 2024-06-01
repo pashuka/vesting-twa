@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "homepage": "https://spintria-ton.github.io/twa",
+  "homepage": "https://pashuka.github.io/vesting-twa",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

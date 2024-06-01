@@ -1,5 +1,4 @@
 import { Address, Cell, Contract, ContractProvider, beginCell } from '@ton/core';
-import { fromNano } from '@ton/ton';
 
 export default class JettonWallet implements Contract {
   constructor(
@@ -9,7 +8,7 @@ export default class JettonWallet implements Contract {
 
   async getBalance(provider: ContractProvider) {
     const { stack } = await provider.get('get_wallet_data', []);
-    return fromNano(stack.readBigNumber());
+    return stack.readBigNumber();
   }
 
   static transferMessage(
