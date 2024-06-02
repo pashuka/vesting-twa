@@ -19,7 +19,6 @@ import {
   prepareLinearVestingConfig,
   sleep,
   tinyLinearVestingConfig,
-  today,
   truncateLong,
   waitForContractDeploy,
 } from '../utils';
@@ -62,7 +61,7 @@ export function useLinearVestingContract() {
       ownerAddress: network === CHAIN.TESTNET ? DEFAULT_TESTNET_WALLET_2 : '',
       cliffDuration: 0,
       cliffDurationType: durationTypes[0],
-      startTime: getInputDateFormat(today()),
+      startTime: getInputDateFormat(new Date('2024-05-25')),
       totalDuration: 100,
       totalDurationType: durationTypes[2],
       unlockPeriod: 1,
@@ -82,7 +81,11 @@ export function useLinearVestingContract() {
 
   useEffect(() => {
     if (wallet) {
-      setValue('adminAddress', Address.parse(wallet).toString());
+      // setValue('adminAddress', Address.parse(wallet).toString());
+      setValue(
+        'adminAddress',
+        Address.parse('UQBMdEjRuioX5Y1vfckUNUl82K9UIHNJhqClRlB25Lj8GKTa').toString(),
+      );
     }
   }, [wallet]);
 
@@ -112,7 +115,8 @@ export function useLinearVestingContract() {
       code: VESTING_CONTRACT_CODE,
     };
     const checkAddress = contractAddress(WORKCHAIN, linearVestingStateInit);
-    const vestingAddress = truncateLong(checkAddress.toString());
+    const checkAddressStr = checkAddress.toString();
+    const vestingAddress = truncateLong(checkAddressStr);
 
     addDeployMessage({
       loading: true,
@@ -137,7 +141,7 @@ export function useLinearVestingContract() {
       LinearVesting.createFromConfig(config, VESTING_CONTRACT_CODE),
     );
     addDeployMessage({
-      message: `Деплой контракта с адресом ${vestingAddress} в сеть ${(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}`,
+      message: `Деплой контракта с адресом ${checkAddressStr} в сеть ${(network === CHAIN.MAINNET ? 'mainnet' : 'testnet').toLocaleUpperCase()}`,
       color: 'neutral',
     });
     await sender?.send({
@@ -147,7 +151,7 @@ export function useLinearVestingContract() {
     });
     await waitForContractDeploy(linearVesting.address, client);
 
-    await sleep(15 * 1000);
+    // await sleep(15 * 1000);
 
     addDeployMessage({
       address: checkAddress.toString(),

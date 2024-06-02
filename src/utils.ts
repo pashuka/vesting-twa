@@ -1,7 +1,12 @@
+import { maskitoNumberOptionsGenerator } from '@maskito/kit';
 import { Address } from '@ton/core';
 import { TonClient } from '@ton/ton';
 import { CHAIN } from '@tonconnect/ui-react';
-import { DEFAULT_DECIMAL_PLACES, START_TIME_OVERHEAD } from './constants';
+import {
+  DEFAULT_DECIMAL_PLACES,
+  MASKITO_THOUSAND_SEPARATOR,
+  START_TIME_OVERHEAD,
+} from './constants';
 import { LinearVestingConfig, LinearVestingConfigTiny } from './contracts/LinearVesting';
 import Big from './lib/big.js';
 import { DurationType, LinearVestingForm } from './types';
@@ -227,6 +232,15 @@ export function toBig(value: bigint | number, decimals = DEFAULT_DECIMAL_PLACES,
     .round(decimals, noFloor ? Big.roundHalfUp : undefined);
 }
 
+export function fromDecimal(value: string | number, decimals?: number) {
+  return BigInt(
+    Big(value)
+      .mul(ten.pow(decimals ?? DEFAULT_DECIMAL_PLACES))
+      .round()
+      .toString(),
+  );
+}
+
 export function toDecimal(value: bigint | number, decimals?: number, noFloor = false) {
   return toBig(value, decimals ?? DEFAULT_DECIMAL_PLACES, noFloor).toString();
 }
@@ -257,3 +271,14 @@ export const tinyLinearVestingConfig = (value: LinearVestingConfig): LinearVesti
   u: value.unlock_period,
   c: value.cliff_duration,
 });
+
+export const maskitoAmountMaskGenerator = (decimals?: number) =>
+  maskitoNumberOptionsGenerator({
+    thousandSeparator: MASKITO_THOUSAND_SEPARATOR,
+    decimalZeroPadding: false,
+    precision: decimals ?? DEFAULT_DECIMAL_PLACES,
+    decimalSeparator: '.',
+    min: 0,
+    // postfix: '',
+  });
+export const transformBackFromMasktio = (s: string) => s.split(MASKITO_THOUSAND_SEPARATOR).join('');

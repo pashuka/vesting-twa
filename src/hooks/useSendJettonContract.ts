@@ -1,6 +1,8 @@
+import { MaskitoOptions } from '@maskito/core';
+import { useMaskito } from '@maskito/react';
 import { useQuery } from '@tanstack/react-query';
 import { Address, OpenedContract, beginCell, fromNano, toNano } from '@ton/core';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { DEFAULT_DECIMAL_PLACES } from '../constants';
 import Jetton from '../contracts/Jetton';
@@ -8,7 +10,14 @@ import JettonWallet from '../contracts/JettonWallet';
 import { LinearVesting, Opcodes } from '../contracts/LinearVesting';
 import { getJettonMetadata } from '../metadata';
 import { deployedVestingAddressState, jettonMasterAddressState } from '../state';
-import { getAddress, toDecimal, waitForSeqno } from '../utils';
+import {
+  fromDecimal,
+  getAddress,
+  maskitoAmountMaskGenerator,
+  toDecimal,
+  transformBackFromMasktio,
+  waitForSeqno,
+} from '../utils';
 import { useAsyncInitialize } from './useAsyncInitialize';
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
@@ -57,15 +66,6 @@ export function useJettonContract() {
     ) as OpenedContract<JettonWallet>;
   }, [jettonMasterContract, client, linearVestingContract]);
 
-  const queryVesting = useQuery({
-    queryKey: ['linear-vesting', linearVestingContract],
-    // refetchInterval: 10 * 1000,
-    queryFn: async () => {
-      if (!linearVestingContract) return null;
-      return await linearVestingContract.getVestingData();
-    },
-  });
-
   const queryJettonMetaData = useQuery({
     queryKey: ['jetton-master-data', jettonMasterContract],
     // refetchInterval: 5 * 1000,
@@ -82,12 +82,27 @@ export function useJettonContract() {
     },
   });
 
+  const queryVesting = useQuery({
+    queryKey: ['linear-vesting', linearVestingContract, queryJettonMetaData],
+    // refetchInterval: 10 * 1000,
+    queryFn: async () => {
+      if (!linearVestingContract || !queryJettonMetaData.data?.content) return null;
+      const data = await linearVestingContract.getVestingData();
+      const { content } = queryJettonMetaData.data;
+      const decimals = content?.decimals ? Number(content.decimals) : DEFAULT_DECIMAL_PLACES;
+      const totalDeposited = toDecimal(data.totalDeposited, decimals),
+        totalWithdrawals = toDecimal(data.totalWithdrawals, decimals);
+      return { ...data, totalDeposited, totalWithdrawals };
+    },
+  });
+
   const queryBalance = useQuery({
     queryKey: ['jetton-wallet-balance', jettonWalletContract, updateBalance, queryJettonMetaData],
     // refetchInterval: 5 * 1000,
     queryFn: async () => {
       if (!jettonWalletContract || !queryJettonMetaData.data) return null;
       setUpdateBalance(false);
+
       const { content } = queryJettonMetaData.data;
       const decimals = content?.decimals ? Number(content.decimals) : DEFAULT_DECIMAL_PLACES;
       const balance = await jettonWalletContract.getBalance();
@@ -97,22 +112,41 @@ export function useJettonContract() {
   });
 
   const { data: jettonVestingData, isFetching: jettonVesingIsFetching } = useQuery({
-    queryKey: ['jetton-vesting-balance', jettonVestingContract, updateVestingData],
+    queryKey: [
+      'jetton-vesting-balance',
+      jettonVestingContract,
+      updateVestingData,
+      queryJettonMetaData,
+    ],
     // refetchInterval: 5 * 1000,
     queryFn: async () => {
-      if (!jettonVestingContract) return null;
-      if (!jettonVestingContract) return null;
+      if (!jettonVestingContract || !updateVestingData || !queryJettonMetaData.data?.content)
+        return null;
       setUpdateVestingData(false);
+      const { content } = queryJettonMetaData.data;
+      const decimals = content?.decimals ? Number(content.decimals) : DEFAULT_DECIMAL_PLACES;
       const balance = await jettonVestingContract.getBalance();
-      return fromNano(balance);
+      return toDecimal(balance, decimals);
     },
   });
+  const [amountMaskGenerator, setAmountMaskGenerator] = useState<Required<MaskitoOptions>>();
+  const amountInputRef = useMaskito({ options: amountMaskGenerator });
+
+  useEffect(() => {
+    if (!queryJettonMetaData.data?.content) return;
+    if (amountMaskGenerator) return;
+
+    const { content } = queryJettonMetaData.data;
+    const decimals = content?.decimals ? Number(content.decimals) : DEFAULT_DECIMAL_PLACES;
+    setAmountMaskGenerator(maskitoAmountMaskGenerator(decimals));
+  }, [queryJettonMetaData, amountMaskGenerator]);
 
   return {
+    amountInputRef,
     queryVesting,
     isVestingFinished: !!(
       queryVesting.data &&
-      queryVesting.data.totalDeposited !== 0n &&
+      queryVesting.data.totalDeposited !== '0' &&
       queryVesting.data.totalDeposited === queryVesting.data.totalWithdrawals
     ),
     queryBalance,
@@ -123,26 +157,36 @@ export function useJettonContract() {
     setJettonMasterAddress,
     jettonWalletAddress: jettonWalletContract?.address,
     jettonAmount,
-    jettonAmountNumber: Number((jettonAmount || '0').split(' ').join('')),
+    jettonAmountNumber: transformBackFromMasktio(jettonAmount || '0'),
     setJettonAmount,
     deployedVestingAddress,
     setDeployedVestingAddress,
     sending,
     sendJettons: async () => {
-      if (!client || !wallet || !linearVestingContract || !jettonWalletContract) {
+      if (
+        !client ||
+        !wallet ||
+        !linearVestingContract ||
+        !jettonWalletContract ||
+        !queryJettonMetaData.data?.content
+      ) {
         return;
       }
       setSending(true);
 
       const waiter = await waitForSeqno(client, Address.parse(wallet));
 
-      const jettonAmountNumber = Number((jettonAmount || '0').split(' ').join(''));
+      const { content } = queryJettonMetaData.data;
+      const decimals = content?.decimals ? Number(content.decimals) : DEFAULT_DECIMAL_PLACES;
+      const jettonAmountNumber = transformBackFromMasktio(jettonAmount || '0');
+
+      const jettonAmountFormatted = fromDecimal(jettonAmountNumber, decimals);
 
       await sender?.send({
         to: jettonWalletContract.address,
         value: toNano('0.1'),
         body: JettonWallet.transferMessage(
-          toNano(jettonAmountNumber),
+          jettonAmountFormatted,
           linearVestingContract.address,
           jettonWalletContract.address,
           null,

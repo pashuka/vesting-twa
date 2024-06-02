@@ -1,5 +1,3 @@
-import { useMaskito } from '@maskito/react';
-import { Done } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -12,13 +10,11 @@ import {
   ListItem,
   Typography,
 } from '@mui/joy';
-import { fromNano } from '@ton/core';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru'; // import locale
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useState } from 'react';
-import { amountMask } from '../../constants';
 import { useJettonContract } from '../../hooks/useSendJettonContract';
 import { useTonConnect } from '../../hooks/useTonConnect';
 import { TonviewerLink } from './tonviewer-link';
@@ -28,10 +24,10 @@ dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
 export function SendJettonsTab() {
-  const amountInputRef = useMaskito({ options: amountMask });
   const [pickBySelfVestingAddress, setPickBySelfVestingAddress] = useState(false);
   const { connected, isMainnet } = useTonConnect();
   const {
+    amountInputRef,
     linearVestingAddress,
     jettonWalletAddress,
     jettonMasterAddress,
@@ -53,9 +49,22 @@ export function SendJettonsTab() {
 
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
+      <FormControl
+        disabled={!connected || isVestingFinished}
+        error={!deployedVestingAddress || deployedVestingAddress.length === 0}
+      >
+        <FormLabel>Вестинг контракт</FormLabel>
+        <Input
+          size="lg"
+          type="text"
+          placeholder=""
+          value={deployedVestingAddress?.toString() || ''}
+          onChange={(e) => setDeployedVestingAddress(e.target.value)}
+        />
+      </FormControl>
       <Alert color="neutral">
         <List size="sm">
-          <ListItem color={'neutral'}>
+          {/* <ListItem color={'neutral'}>
             Вестинг контракт:{' '}
             {linearVestingAddress ? (
               <>
@@ -90,7 +99,7 @@ export function SendJettonsTab() {
                 onChange={(e) => setDeployedVestingAddress(e.target.value)}
               />
             )}
-          </ListItem>
+          </ListItem> */}
           <ListItem color="neutral">
             Инвестор:{' '}
             {queryVesting.data && (
@@ -129,12 +138,11 @@ export function SendJettonsTab() {
                 : 'отключен'}
           </ListItem>
           <ListItem color="neutral">
-            Всего получено жетонов:{' '}
-            {!queryVesting.data ? '...' : fromNano(queryVesting.data?.totalDeposited).toString()}
+            Всего получено жетонов: {!queryVesting.data ? '...' : queryVesting.data?.totalDeposited}
           </ListItem>
           <ListItem color="neutral">
             Всего выведено жетонов:{' '}
-            {!queryVesting.data ? '...' : fromNano(queryVesting.data?.totalWithdrawals).toString()}
+            {!queryVesting.data ? '...' : queryVesting.data?.totalWithdrawals}
           </ListItem>
           <ListItem color="neutral">
             Баланс вестинг-кошелка:{' '}
@@ -171,7 +179,7 @@ export function SendJettonsTab() {
         </List>
       </Alert>
 
-      <FormControl disabled={!connected || isVestingFinished}>
+      {/* <FormControl disabled={!connected || isVestingFinished}>
         <FormLabel>Мастер контракт жетонв (адрес контракта)</FormLabel>
         <Input
           type="text"
@@ -180,12 +188,12 @@ export function SendJettonsTab() {
           // onChange={(e) => setJettonMasterAddress(e.target.value)}
           disabled
         />
-      </FormControl>
-      <FormControl disabled>
+      </FormControl> */}
+      {/* <FormControl disabled>
         <FormLabel>Адрес вашего кошелька</FormLabel>
         <Input value={jettonWalletAddress?.toString() || ''} />
-      </FormControl>
-      <FormControl disabled>
+      </FormControl> */}
+      {/* <FormControl disabled>
         <FormLabel>Баланс вашего кошелька</FormLabel>
         <Input
           value={
@@ -200,7 +208,7 @@ export function SendJettonsTab() {
             {queryJettonMetaData.data?.content?.description} ]
           </FormHelperText>
         )}
-      </FormControl>
+      </FormControl> */}
       <FormControl
         disabled={!connected || !queryBalance.data || isVestingFinished}
         error={Number(jettonAmountNumber) <= 0}
@@ -213,6 +221,16 @@ export function SendJettonsTab() {
           value={jettonAmount}
           // onChange={(e) => setJettonAmount(e.target.value)}
           startDecorator={queryJettonMetaData.data?.content?.symbol}
+          endDecorator={
+            <Button
+              variant="plain"
+              color="primary"
+              disabled={jettonAmount === '0'}
+              onClick={() => setJettonAmount(queryBalance?.data || '0')}
+            >
+              MAX
+            </Button>
+          }
           slotProps={{
             input: {
               ref: amountInputRef,
@@ -220,8 +238,22 @@ export function SendJettonsTab() {
             },
           }}
         />
-        {jettonAmount.length > 0 && jettonAmountNumber <= 0 && (
+        {jettonAmount.length > 0 && Number(jettonAmountNumber) <= 0 && (
           <FormHelperText>Сумма должна быть больше нуля</FormHelperText>
+        )}
+        {queryBalance.data === '0' ? (
+          <FormHelperText>Баланс должен быть больше нуля</FormHelperText>
+        ) : (
+          queryJettonMetaData.data?.content?.name && (
+            <FormHelperText>
+              Доступно:{' '}
+              {queryBalance.data
+                ? `${queryBalance.data.toLocaleString()} ${queryJettonMetaData.data?.content?.symbol}`
+                : ''}
+              {/* {queryJettonMetaData.data?.content?.name} [{' '} */}
+              {/* {queryJettonMetaData.data?.content?.description} ] */}
+            </FormHelperText>
+          )
         )}
       </FormControl>
       {!connected && <Alert color="danger">Подключите кошелек для отправки жетонов</Alert>}
@@ -231,7 +263,8 @@ export function SendJettonsTab() {
         disabled={
           !connected ||
           !queryBalance.data ||
-          jettonAmountNumber === 0 ||
+          queryBalance.data === '0' ||
+          Number(jettonAmountNumber) === 0 ||
           !linearVestingAddress ||
           sending ||
           isVestingFinished

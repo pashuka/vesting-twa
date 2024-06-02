@@ -70,7 +70,7 @@ export function DeployVestingTab() {
     <form onSubmit={handleSubmit(onSubmit)}>
       <Box sx={{ display: 'grid', gap: 2 }}>
         {/*  */}
-        <FormControl disabled>
+        <FormControl>
           <FormLabel>
             Кошелек администратора
             <FormLabelTooltip title="Адрес кошелька администратора" />
